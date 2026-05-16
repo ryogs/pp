@@ -59,28 +59,35 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   user-select: none;
 }
 
-/* ── Vertical rainbow bar (the main object) ─────────────────────────────────
-   Tall pill, centred, interactive — touch/click scrolls to the archive.      */
+/* ── Vertical ellipse (the main object) ──────────────────────────────────────
+   Hollow ellipse: rainbow border only, white interior.
+   The border itself carries the animated spectrum.                            */
 .rainbow-pill {
-  --h: clamp(200px, 44vh, 340px);
-  --w: 7px;
-  width: var(--w);
-  height: var(--h);
-  border-radius: 9999px;
+  --pill-w: clamp(80px, 20vw, 120px);
+  --pill-h: clamp(240px, 52vh, 380px);
+  --border-t: 2px;                      /* stroke thickness */
+  --pill-r: clamp(40px, 10vw, 60px);   /* corner radius — large but not 50% */
+  width: var(--pill-w);
+  height: var(--pill-h);
+  border-radius: var(--pill-r);
   position: relative;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  /* Animate a subtle pulse to invite interaction */
+  background: transparent;
+  /* Opacity-only pulse — no size change */
   animation: pulse 3.2s ease-in-out infinite;
 }
 
-/* Gradient layer */
+/* Rainbow border ring — rendered as a pseudo-element sitting behind a
+   white mask that punches out the centre, leaving only the stroke.           */
+
+/* Outer coloured ring (full shape, gradient background) */
 .rainbow-pill::before {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 9999px;
+  border-radius: var(--pill-r);
   background: linear-gradient(
     to bottom,
     #d8d8dc 0%,
@@ -99,24 +106,17 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   background-size: 100% 600%;
   animation: flow 22s linear infinite;
   filter: saturate(1.5) brightness(1.05);
+  z-index: 0;
 }
 
-/* Shimmer overlay */
+/* White inner shape that creates the hollow centre */
 .rainbow-pill::after {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.7) 0%,
-    rgba(255,255,255,0) 20%,
-    rgba(0,0,0,0.12) 50%,
-    rgba(255,255,255,0.5) 80%,
-    rgba(255,255,255,0) 100%
-  );
-  mix-blend-mode: overlay;
-  animation: shimmer 8s ease-in-out infinite;
+  inset: var(--border-t);
+  border-radius: calc(var(--pill-r) - var(--border-t));
+  background: #fff;
+  z-index: 1;
 }
 
 @keyframes flow {
@@ -128,8 +128,8 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   50%       { opacity: 1; }
 }
 @keyframes pulse {
-  0%, 100% { transform: scaleY(1);    opacity: 1; }
-  50%       { transform: scaleY(1.03); opacity: 0.92; }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.88; }
 }
 
 /* Flick cue below the bar */
@@ -220,13 +220,22 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   flex-shrink: 0;
 }
 
-.arch-header-num {
+.arch-header-back {
   margin-left: auto;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #000;
+  line-height: 1;
 }
+.arch-header-back svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.arch-header-back:active { opacity: 0.4; }
 
 /* ── Project list ─────────────────────────────────────────────────────────────
    MSCHF-style: #N + name only. Tap opens the tile detail.                    */
@@ -417,8 +426,6 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 
 <!-- ── LANDING ──────────────────────────────────────────────────────────────── -->
 <div id="landing">
-  <span class="landing-title">Sovereign Archive</span>
-
   <!-- The main object: tall rainbow pill, tap to enter -->
   <div class="rainbow-pill" id="rainbowBtn" role="button" aria-label="Enter archive" tabindex="0"></div>
 
@@ -435,7 +442,11 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   <header class="arch-header">
     <div class="arch-header-pill" aria-hidden="true"></div>
     <span class="arch-header-title">Sovereign Archive</span>
-    <span class="arch-header-num" id="archCount">—</span>
+    <button class="arch-header-back" id="archBack" aria-label="Back to landing">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
   </header>
 
   <ul class="project-list" id="projectList"></ul>
@@ -506,10 +517,11 @@ projects.forEach(p => {
   list.appendChild(li);
 });
 
-// ── Landing → Archive transition ───────────────────────────────────────────────
+// ── Landing ↔ Archive transition ───────────────────────────────────────────────
 const landing = document.getElementById("landing");
 const archive = document.getElementById("archive");
 const rainbowBtn = document.getElementById("rainbowBtn");
+const archBack   = document.getElementById("archBack");
 
 function enterArchive() {
   landing.classList.add("dismissed");
@@ -517,10 +529,17 @@ function enterArchive() {
   document.body.style.overflow = "";
 }
 
+function backToLanding() {
+  landing.classList.remove("dismissed");
+  archive.classList.remove("visible");
+  document.body.style.overflow = "hidden";
+}
+
 rainbowBtn.addEventListener("click", enterArchive);
 rainbowBtn.addEventListener("keydown", e => {
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enterArchive(); }
 });
+archBack.addEventListener("click", backToLanding);
 
 // Prevent body scroll while landing is visible
 document.body.style.overflow = "hidden";
