@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ── Reset ─────────────────────────────────────────────────────────────────── */
+/* ── Reset ──────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
@@ -26,8 +26,9 @@ html, body {
 a { color: inherit; text-decoration: none; }
 button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-/* ── LANDING SCREEN ────────────────────────────────────────────────────────── */
-/* Full-screen intro with the rainbow bar as the centrepiece.                  */
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING
+═══════════════════════════════════════════════════════════════════════════ */
 #landing {
   position: fixed;
   inset: 0;
@@ -37,7 +38,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  /* landing is always overflow:hidden — controlled by JS on body */
   transition: opacity 600ms cubic-bezier(0.4, 0, 0.2, 1),
               transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -47,26 +48,12 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   pointer-events: none;
 }
 
-/* Title above the bar */
-.landing-title {
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #000;
-  margin-bottom: 32px;
-  user-select: none;
-}
-
-/* ── Vertical ellipse (the main object) ──────────────────────────────────────
-   Hollow ellipse: rainbow border only, white interior.
-   The border itself carries the animated spectrum.                            */
+/* ── Ellipse object ─────────────────────────────────────────────────────────── */
 .rainbow-pill {
   --pill-w: clamp(80px, 20vw, 120px);
   --pill-h: clamp(240px, 52vh, 380px);
-  --border-t: 2px;                      /* stroke thickness */
-  --pill-r: clamp(40px, 10vw, 60px);   /* corner radius — large but not 50% */
+  --border-t: 2px;
+  --pill-r: clamp(40px, 10vw, 60px);
   width: var(--pill-w);
   height: var(--pill-h);
   border-radius: var(--pill-r);
@@ -75,14 +62,9 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   background: transparent;
-  /* Opacity-only pulse — no size change */
-  animation: pulse 3.2s ease-in-out infinite;
+  animation: pill-pulse 3.2s ease-in-out infinite;
 }
-
-/* Rainbow border ring — rendered as a pseudo-element sitting behind a
-   white mask that punches out the centre, leaving only the stroke.           */
-
-/* Outer coloured ring (full shape, gradient background) */
+/* Outer rainbow fill */
 .rainbow-pill::before {
   content: "";
   position: absolute;
@@ -90,49 +72,33 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   border-radius: var(--pill-r);
   background: linear-gradient(
     to bottom,
-    #d8d8dc 0%,
-    #ffb7c8 9%,
-    #ffd99a 18%,
-    #fff5a2 28%,
-    #b6ffc3 38%,
-    #a5e4ff 49%,
-    #b0b8ff 59%,
-    #e0a8ff 68%,
-    #ff9eb8 77%,
-    #ffd28a 86%,
-    #c6ffae 94%,
-    #d8d8dc 100%
+    #d8d8dc 0%, #ffb7c8 9%, #ffd99a 18%, #fff5a2 28%,
+    #b6ffc3 38%, #a5e4ff 49%, #b0b8ff 59%, #e0a8ff 68%,
+    #ff9eb8 77%, #ffd28a 86%, #c6ffae 94%, #d8d8dc 100%
   );
   background-size: 100% 600%;
   animation: flow 22s linear infinite;
   filter: saturate(1.5) brightness(1.05);
-  z-index: 0;
 }
-
-/* White inner shape that creates the hollow centre */
+/* White punch-out centre */
 .rainbow-pill::after {
   content: "";
   position: absolute;
   inset: var(--border-t);
   border-radius: calc(var(--pill-r) - var(--border-t));
   background: #fff;
-  z-index: 1;
 }
 
 @keyframes flow {
   0%   { background-position: 0% 0%; }
   100% { background-position: 0% 600%; }
 }
-@keyframes shimmer {
-  0%, 100% { opacity: 0.8; }
-  50%       { opacity: 1; }
-}
-@keyframes pulse {
+@keyframes pill-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.88; }
 }
 
-/* Flick cue below the bar */
+/* ── Landing cue ────────────────────────────────────────────────────────────── */
 .landing-cue {
   margin-top: 28px;
   display: flex;
@@ -143,8 +109,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   animation: cue-fade 2s ease-in-out 1.2s both;
 }
 .landing-cue-line {
-  width: 1px;
-  height: 32px;
+  width: 1px; height: 32px;
   background: linear-gradient(to bottom, #000, transparent);
 }
 .landing-cue-label {
@@ -158,11 +123,9 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* Count bottom-right of landing */
 .landing-count {
   position: absolute;
-  bottom: env(safe-area-inset-bottom, 28px);
+  bottom: max(env(safe-area-inset-bottom), 28px);
   right: 24px;
   font-family: "Geist Mono", monospace;
   font-size: 9px;
@@ -170,20 +133,21 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   color: #bbb;
 }
 
-/* ── ARCHIVE SCREEN ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARCHIVE WRAPPER  (grid + list live inside here)
+═══════════════════════════════════════════════════════════════════════════ */
 #archive {
-  /* Hidden behind landing initially */
   opacity: 0;
-  transition: opacity 500ms ease 200ms;
   pointer-events: none;
   min-height: 100dvh;
+  transition: opacity 500ms ease 200ms;
 }
 #archive.visible {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* ── Sticky header ───────────────────────────────────────────────────────────── */
+/* ── Sticky header ──────────────────────────────────────────────────────────── */
 .arch-header {
   position: sticky;
   top: 0;
@@ -195,21 +159,14 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   height: 44px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  gap: 12px;
+  padding: 0 16px 0 16px;
+  gap: 10px;
 }
-.arch-header-title {
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-
-/* Mini rainbow pill in header (echoes the landing object) */
+/* Mini pill */
 .arch-header-pill {
-  width: 4px;
-  height: 20px;
+  width: 4px; height: 20px;
   border-radius: 9999px;
+  flex-shrink: 0;
   background: linear-gradient(
     to bottom,
     #ffb7c8, #ffd99a, #fff5a2, #b6ffc3, #a5e4ff, #b0b8ff, #e0a8ff, #ffb7c8
@@ -217,231 +174,273 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   background-size: 100% 600%;
   animation: flow 22s linear infinite;
   filter: saturate(1.4);
-  flex-shrink: 0;
 }
-
-.arch-header-back {
+.arch-header-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+/* View-toggle buttons */
+.view-toggle {
   margin-left: auto;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
+  gap: 2px;
+}
+.vtbtn {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  color: #bbb;
+  transition: color 150ms ease, background 150ms ease;
+}
+.vtbtn.active { color: #000; }
+.vtbtn svg { width: 16px; height: 16px; display: block; }
+/* Back arrow */
+.arch-header-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
   color: #000;
-  line-height: 1;
+  margin-left: 4px;
 }
-.arch-header-back svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
+.arch-header-back svg { width: 18px; height: 18px; display: block; }
 .arch-header-back:active { opacity: 0.4; }
 
-/* ── Project list ─────────────────────────────────────────────────────────────
-   MSCHF-style: #N + name only. Tap opens the tile detail.                    */
-.project-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRID VIEW  (klikkentheke-style 2-col)
+═══════════════════════════════════════════════════════════════════════════ */
+#gridView {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: none;
 }
+#gridView.hidden { display: none; }
+
+.grid-cell {
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  transition: background 120ms ease;
+}
+.grid-cell:nth-child(even) { border-right: none; }
+.grid-cell:active { background: #f0f0f0; }
+
+/* Image area — square placeholder with ? */
+.grid-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e0e0e0;
+  position: relative;
+  overflow: hidden;
+}
+.grid-img-q {
+  font-family: "Geist", sans-serif;
+  font-size: clamp(32px, 10vw, 52px);
+  font-weight: 300;
+  color: #ccc;
+  user-select: none;
+}
+
+/* Text block under image */
+.grid-meta {
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.grid-tag {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+}
+.grid-name {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: #000;
+}
+.grid-num {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: #bbb;
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIST VIEW  (MSCHF-style)
+═══════════════════════════════════════════════════════════════════════════ */
+#listView {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+#listView.hidden { display: none; }
 
 .project-row {
   border-bottom: 1px solid #e8e8e8;
   display: grid;
-  grid-template-columns: 44px 1fr 24px;
+  grid-template-columns: 44px 1fr 20px;
   align-items: center;
   min-height: 48px;
-  padding: 0 20px 0 0;
+  padding: 0 16px 0 0;
   cursor: pointer;
   transition: background 120ms ease;
   -webkit-tap-highlight-color: transparent;
 }
-.project-row:first-child { border-top: none; }
 .project-row:active { background: #f8f8f8; }
-
 .row-num {
-  padding: 0 0 0 20px;
+  padding-left: 20px;
   font-family: "Geist Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
   color: #bbb;
-  line-height: 48px;
   white-space: nowrap;
 }
 .row-name {
   font-size: 13px;
   font-weight: 400;
-  letter-spacing: 0.01em;
-  padding: 14px 12px 14px 0;
+  padding: 14px 10px 14px 0;
   line-height: 1.3;
 }
 .row-arrow {
   font-family: "Geist Mono", monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: #ccc;
   text-align: right;
-  line-height: 1;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────────── */
 .arch-footer {
   border-top: 1px solid #000;
-  padding: 20px 20px calc(env(safe-area-inset-bottom, 16px) + 20px);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  padding: 20px 20px max(env(safe-area-inset-bottom), 20px);
+  display: flex; align-items: center; gap: 8px;
 }
 .arch-footer-copy {
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #bbb;
+  font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #bbb;
 }
 .arch-footer-yr {
   margin-left: auto;
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.2em;
-  color: #bbb;
+  font-size: 8px; letter-spacing: 0.2em; color: #bbb;
 }
 
-/* ── Detail overlay ──────────────────────────────────────────────────────────
-   Opens over the list when a project row is tapped.                         */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DETAIL OVERLAY
+═══════════════════════════════════════════════════════════════════════════ */
 #detail {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   z-index: 200;
   background: #fff;
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   transform: translateY(100%);
   transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-#detail.open {
-  transform: translateY(0);
-}
+#detail.open { transform: translateY(0); }
 
 .detail-header {
   height: 52px;
   border-bottom: 1px solid #000;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 14px;
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 14px;
   flex-shrink: 0;
 }
 .detail-back {
   font-family: "Geist Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: #000;
-  padding: 8px 0;
+  font-size: 11px; letter-spacing: 0.06em; color: #000; padding: 8px 0;
 }
-.detail-back:hover { opacity: 0.5; }
+.detail-back:active { opacity: 0.4; }
 .detail-header-num {
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  color: #bbb;
-  margin-left: auto;
+  font-size: 9px; letter-spacing: 0.14em; color: #bbb; margin-left: auto;
 }
-
-/* The tile: square, black border, ? centred */
 .detail-tile {
-  flex: 0 0 auto;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-bottom: 1px solid #000;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 0 0 auto; width: 100%; aspect-ratio: 1 / 1;
+  border-bottom: 1px solid #000; background: #fff;
+  display: flex; align-items: center; justify-content: center;
   position: relative;
 }
 .detail-tile-q {
   font-family: "Geist", sans-serif;
   font-size: clamp(64px, 22vw, 120px);
-  font-weight: 300;
-  color: #000;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  user-select: none;
+  font-weight: 300; color: #000;
+  letter-spacing: -0.04em; line-height: 1; user-select: none;
 }
-/* Subtle corner marks */
-.detail-tile::before,
-.detail-tile::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-color: #ccc;
-  border-style: solid;
+.detail-tile::before, .detail-tile::after {
+  content: ""; position: absolute;
+  width: 10px; height: 10px;
+  border-color: #ccc; border-style: solid;
 }
-.detail-tile::before {
-  top: 12px; left: 12px;
-  border-width: 1px 0 0 1px;
-}
-.detail-tile::after {
-  bottom: 12px; right: 12px;
-  border-width: 0 1px 1px 0;
-}
-
-.detail-meta {
-  padding: 24px 20px;
-  flex: 1;
-}
+.detail-tile::before { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+.detail-tile::after  { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+.detail-meta { padding: 24px 20px; flex: 1; }
 .detail-name {
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
-  line-height: 1.1;
+  font-size: 22px; font-weight: 500;
+  letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.1;
 }
-.detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .detail-tag {
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  border: 1px solid #ddd;
-  padding: 4px 8px;
-  color: #888;
-  border-radius: 2px;
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  border: 1px solid #ddd; padding: 4px 8px; color: #888; border-radius: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rainbow-pill::before,
-  .arch-header-pill { animation-duration: 120s; }
-  .rainbow-pill { animation: none; }
+  .rainbow-pill, .arch-header-pill { animation-duration: 120s; }
   #landing, #archive, #detail { transition-duration: 0ms; }
 }
 </style>
 </head>
 <body>
 
-<!-- ── LANDING ──────────────────────────────────────────────────────────────── -->
+<!-- ── LANDING ─────────────────────────────────────────────────────────────── -->
 <div id="landing">
-  <!-- The main object: tall rainbow pill, tap to enter -->
   <div class="rainbow-pill" id="rainbowBtn" role="button" aria-label="Enter archive" tabindex="0"></div>
-
   <div class="landing-cue">
     <div class="landing-cue-line"></div>
     <span class="landing-cue-label">Tap</span>
   </div>
-
   <span class="landing-count">001 — 100</span>
 </div>
 
-<!-- ── ARCHIVE ──────────────────────────────────────────────────────────────── -->
+<!-- ── ARCHIVE ─────────────────────────────────────────────────────────────── -->
 <div id="archive">
   <header class="arch-header">
     <div class="arch-header-pill" aria-hidden="true"></div>
     <span class="arch-header-title">Sovereign Archive</span>
+
+    <!-- View toggle -->
+    <div class="view-toggle">
+      <!-- Grid icon -->
+      <button class="vtbtn active" id="btnGrid" aria-label="Grid view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/>
+          <rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>
+        </svg>
+      </button>
+      <!-- List icon -->
+      <button class="vtbtn" id="btnList" aria-label="List view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Back to landing -->
     <button class="arch-header-back" id="archBack" aria-label="Back to landing">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
@@ -449,7 +448,11 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
     </button>
   </header>
 
-  <ul class="project-list" id="projectList"></ul>
+  <!-- Grid view -->
+  <div id="gridView"></div>
+
+  <!-- List view -->
+  <ul id="listView" class="hidden"></ul>
 
   <footer class="arch-footer">
     <span class="arch-footer-copy">© MMXXVI</span>
@@ -457,7 +460,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   </footer>
 </div>
 
-<!-- ── DETAIL ───────────────────────────────────────────────────────────────── -->
+<!-- ── DETAIL ──────────────────────────────────────────────────────────────── -->
 <div id="detail">
   <div class="detail-header">
     <button class="detail-back" id="detailBack">← Back</button>
@@ -473,59 +476,91 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 </div>
 
 <script>
-// ── Project data ───────────────────────────────────────────────────────────────
-// 100 numbered entries. Real names to be filled; placeholders for now.
+/* ── Data ──────────────────────────────────────────────────────────────────── */
 const TOTAL = 100;
-const pad = n => String(n).padStart(3, "0");
+const pad3  = n => String(n).padStart(3, "0");
 
-// Placeholder tags pool
-const TAG_POOL = ["Ongoing","Archive","Research","Object","System","Field","Index","Surface","Form","Light","Time","Space","Signal","Territory","Currency","Sovereign","Material","Network","Protocol","Fragment"];
+const TAG_POOL = [
+  "Ongoing","Archive","Research","Object","System","Field",
+  "Index","Surface","Form","Light","Time","Space",
+  "Signal","Territory","Currency","Sovereign","Material","Network","Protocol","Fragment"
+];
 
-function randomTags(seed, count = 3) {
-  // deterministic shuffle via seed
-  let h = seed * 2654435761 >>> 0;
-  const out = [];
-  const pool = [...TAG_POOL];
+function deterministicTags(seed, count = 3) {
+  let h = (seed * 2654435761) >>> 0;
+  const pool = [...TAG_POOL], out = [];
   for (let i = 0; i < count; i++) {
-    h = (h ^ (h >>> 16)) * 0x45d9f3b >>> 0;
+    h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
     const idx = h % pool.length;
-    out.push(pool[idx]);
-    pool.splice(idx, 1);
+    out.push(pool.splice(idx, 1)[0]);
   }
   return out;
 }
 
 const projects = Array.from({ length: TOTAL }, (_, i) => ({
-  n: i + 1,
-  name: `Project ${pad(i + 1)}`,
-  tags: randomTags(i + 1, 3),
+  n:    i + 1,
+  name: `Project ${pad3(i + 1)}`,
+  tags: deterministicTags(i + 1, 3),
 }));
 
-// ── Build list ─────────────────────────────────────────────────────────────────
-const list = document.getElementById("projectList");
-document.getElementById("archCount").textContent = `${TOTAL} works`;
+/* ── Build grid ────────────────────────────────────────────────────────────── */
+const gridView = document.getElementById("gridView");
+const listView = document.getElementById("listView");
 
 projects.forEach(p => {
+  // Grid cell
+  const cell = document.createElement("div");
+  cell.className = "grid-cell";
+  cell.dataset.idx = p.n - 1;
+  cell.innerHTML = `
+    <div class="grid-img"><span class="grid-img-q">?</span></div>
+    <div class="grid-meta">
+      <span class="grid-tag">${p.tags[0]}</span>
+      <span class="grid-name">${p.name}</span>
+      <span class="grid-num">#${pad3(p.n)}</span>
+    </div>
+  `;
+  gridView.appendChild(cell);
+
+  // List row
   const li = document.createElement("li");
   li.className = "project-row";
   li.dataset.idx = p.n - 1;
   li.innerHTML = `
-    <span class="row-num">#${pad(p.n)}</span>
+    <span class="row-num">#${pad3(p.n)}</span>
     <span class="row-name">${p.name}</span>
     <span class="row-arrow">›</span>
   `;
-  list.appendChild(li);
+  listView.appendChild(li);
 });
 
-// ── Landing ↔ Archive transition ───────────────────────────────────────────────
-const landing = document.getElementById("landing");
-const archive = document.getElementById("archive");
+/* ── View toggle ───────────────────────────────────────────────────────────── */
+const btnGrid = document.getElementById("btnGrid");
+const btnList = document.getElementById("btnList");
+
+btnGrid.addEventListener("click", () => {
+  gridView.classList.remove("hidden");
+  listView.classList.add("hidden");
+  btnGrid.classList.add("active");
+  btnList.classList.remove("active");
+});
+btnList.addEventListener("click", () => {
+  listView.classList.remove("hidden");
+  gridView.classList.add("hidden");
+  btnList.classList.add("active");
+  btnGrid.classList.remove("active");
+});
+
+/* ── Landing ↔ Archive ─────────────────────────────────────────────────────── */
+const landing    = document.getElementById("landing");
+const archive    = document.getElementById("archive");
 const rainbowBtn = document.getElementById("rainbowBtn");
 const archBack   = document.getElementById("archBack");
 
 function enterArchive() {
   landing.classList.add("dismissed");
   archive.classList.add("visible");
+  // keep body scroll locked only for landing; archive can scroll freely
   document.body.style.overflow = "";
 }
 
@@ -535,28 +570,27 @@ function backToLanding() {
   document.body.style.overflow = "hidden";
 }
 
+// Lock scroll on landing (fixed layout, no scroll needed)
+document.body.style.overflow = "hidden";
+
 rainbowBtn.addEventListener("click", enterArchive);
 rainbowBtn.addEventListener("keydown", e => {
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enterArchive(); }
 });
 archBack.addEventListener("click", backToLanding);
 
-// Prevent body scroll while landing is visible
-document.body.style.overflow = "hidden";
-
-// ── Detail panel ───────────────────────────────────────────────────────────────
-const detail = document.getElementById("detail");
+/* ── Detail ────────────────────────────────────────────────────────────────── */
+const detail     = document.getElementById("detail");
 const detailBack = document.getElementById("detailBack");
 const detailNum  = document.getElementById("detailNum");
 const detailName = document.getElementById("detailName");
 const detailTags = document.getElementById("detailTags");
 
 function openDetail(p) {
-  detailNum.textContent  = `#${pad(p.n)}`;
+  detailNum.textContent  = `#${pad3(p.n)}`;
   detailName.textContent = p.name;
   detailTags.innerHTML   = p.tags.map(t => `<span class="detail-tag">${t}</span>`).join("");
   detail.classList.add("open");
-  // Prevent background scroll
   document.body.style.overflow = "hidden";
 }
 
@@ -565,27 +599,35 @@ function closeDetail() {
   document.body.style.overflow = "";
 }
 
-// Touch vs click on list rows
-let touchMoved = false;
-list.addEventListener("touchstart", () => { touchMoved = false; }, { passive: true });
-list.addEventListener("touchmove",  () => { touchMoved = true;  }, { passive: true });
+// Tap on grid cell
+let tGridMoved = false;
+gridView.addEventListener("touchstart", () => { tGridMoved = false; }, { passive: true });
+gridView.addEventListener("touchmove",  () => { tGridMoved = true;  }, { passive: true });
+gridView.addEventListener("click", e => {
+  if (tGridMoved) return;
+  const cell = e.target.closest(".grid-cell");
+  if (!cell) return;
+  openDetail(projects[+cell.dataset.idx]);
+});
 
-list.addEventListener("click", e => {
-  if (touchMoved) return;
+// Tap on list row
+let tListMoved = false;
+listView.addEventListener("touchstart", () => { tListMoved = false; }, { passive: true });
+listView.addEventListener("touchmove",  () => { tListMoved = true;  }, { passive: true });
+listView.addEventListener("click", e => {
+  if (tListMoved) return;
   const row = e.target.closest(".project-row");
   if (!row) return;
-  const p = projects[+row.dataset.idx];
-  openDetail(p);
+  openDetail(projects[+row.dataset.idx]);
 });
 
 detailBack.addEventListener("click", closeDetail);
 
 // Swipe down to close detail
-let swipeStartY = 0;
-detail.addEventListener("touchstart", e => { swipeStartY = e.touches[0].clientY; }, { passive: true });
-detail.addEventListener("touchend", e => {
-  const dy = e.changedTouches[0].clientY - swipeStartY;
-  if (dy > 60) closeDetail();
+let swipeY = 0;
+detail.addEventListener("touchstart", e => { swipeY = e.touches[0].clientY; }, { passive: true });
+detail.addEventListener("touchend",   e => {
+  if (e.changedTouches[0].clientY - swipeY > 60) closeDetail();
 }, { passive: true });
 
 document.addEventListener("keydown", e => {
