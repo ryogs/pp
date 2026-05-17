@@ -10,364 +10,229 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ─── RESET ──────────────────────────────────────────────────────────────── */
+/* ─── RESET ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html {
-  height: 100%;
-  /* kill scrollbar at html level */
+html, body {
+  height: 100%; width: 100%;
   overflow: hidden;
-}
-body {
-  height: 100%;
-  overflow: hidden;          /* no scroll, no scrollbar, ever */
-  background: #fff;
-  color: #000;
+  background: #fff; color: #000;
   font-family: "Geist", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }
 button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-/* ─── SCREENS ─────────────────────────────────────────────────────────────── */
-/* Every screen is position:fixed, inset:0 — only body needs no scroll */
+/* ─── SCREENS ────────────────────────────────────────────────────────────── */
 .screen {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   background: #fff;
-  /* transition */
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 500ms cubic-bezier(0.4, 0, 0.2, 1),
-              transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0; pointer-events: none;
+  transition: opacity 400ms cubic-bezier(0.4,0,0.2,1),
+              transform 400ms cubic-bezier(0.4,0,0.2,1);
 }
-.screen.active {
-  opacity: 1;
-  pointer-events: auto;
-}
+.screen.active { opacity: 1; pointer-events: auto; }
 
-/* archive & about screens scroll internally */
-#screenArchive,
-#screenAbout {
-  overflow-y: auto;
-  overflow-x: hidden;
+#screenArchive {
+  overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  /* slide-up entry */
-  transform: translateY(20px);
+  transform: translateY(16px);
+  display: flex; flex-direction: column; min-height: 100%;
 }
-#screenArchive.active,
-#screenAbout.active {
-  transform: translateY(0);
+#screenArchive.active { transform: translateY(0); }
+
+#screenAbout {
+  overflow: hidden;
+  transform: translateY(16px);
+  display: flex; flex-direction: column;
+  height: 100%;
 }
+#screenAbout.active { transform: translateY(0); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LANDING
 ═══════════════════════════════════════════════════════════════════════════ */
 #screenLanding {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
 }
 
-/* ── Rainbow ellipse ─────────────────────────────────────────────────────── */
+/* Rainbow pill */
 .rainbow-pill {
-  --w: clamp(78px, 19vw, 112px);
-  --h: clamp(230px, 50vh, 370px);
-  --r: clamp(38px, 9vw, 56px);
+  --w: clamp(78px,19vw,112px);
+  --h: clamp(230px,50vh,370px);
+  --r: clamp(38px,9vw,56px);
   --stroke: 1.8px;
-  width: var(--w);
-  height: var(--h);
-  border-radius: var(--r);
-  position: relative;
+  width: var(--w); height: var(--h);
+  border-radius: var(--r); position: relative;
+  pointer-events: none;
   animation: pill-breathe 4s ease-in-out infinite;
 }
 .rainbow-pill::before {
-  content: "";
-  position: absolute; inset: 0;
+  content: ""; position: absolute; inset: 0;
   border-radius: var(--r);
-  background: linear-gradient(
-    to bottom,
-    #d8d8dc 0%, #ffb7c8 9%, #ffd99a 18%, #fff5a2 27%,
-    #b6ffc3 37%, #a5e4ff 48%, #b0b8ff 58%, #e0a8ff 68%,
-    #ff9eb8 77%, #ffd28a 86%, #c6ffae 94%, #d8d8dc 100%
-  );
+  background: linear-gradient(to bottom,
+    #d8d8dc 0%,#ffb7c8 9%,#ffd99a 18%,#fff5a2 27%,
+    #b6ffc3 37%,#a5e4ff 48%,#b0b8ff 58%,#e0a8ff 68%,
+    #ff9eb8 77%,#ffd28a 86%,#c6ffae 94%,#d8d8dc 100%);
   background-size: 100% 600%;
   animation: flow 22s linear infinite;
   filter: saturate(1.5) brightness(1.04);
 }
 .rainbow-pill::after {
-  content: "";
-  position: absolute;
+  content: ""; position: absolute;
   inset: var(--stroke);
   border-radius: calc(var(--r) - var(--stroke));
   background: #fff;
 }
-@keyframes flow {
-  to { background-position: 0% 600%; }
-}
-@keyframes pill-breathe {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.82; }
-}
+@keyframes flow { to { background-position: 0% 600%; } }
+@keyframes pill-breathe { 0%,100%{opacity:1} 50%{opacity:.82} }
 
-/* ── MENU button ─────────────────────────────────────────────────────────── */
-.menu-btn {
+/* ─── FAB — soft grey pill, reference quality ───────────────────────────────
+   No border. Light grey fill (#f0f0f0). Dark-grey mark (not pure black).
+   Matches the "Follow / Connect / More" button aesthetic from reference.
+   Open state deepens the fill slightly.                                     */
+.fab {
   position: fixed;
-  right: 24px;
-  bottom: max(env(safe-area-inset-bottom, 0px), 32px);
-  z-index: 10;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #000;
-  padding: 10px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  pointer-events: auto;
-}
-.menu-btn-line {
-  width: 1px;
-  height: 20px;
-  background: #000;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   MENU OVERLAY  (full-screen, slides in from bottom)
-═══════════════════════════════════════════════════════════════════════════ */
-#menuOverlay {
-  position: fixed; inset: 0;
-  z-index: 300;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 0 32px max(env(safe-area-inset-bottom, 0px), 48px);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(100%);
-  transition: opacity 400ms ease, transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-#menuOverlay.open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-.menu-close {
-  position: absolute;
-  top: max(env(safe-area-inset-top, 0px), 20px);
-  right: 24px;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #bbb;
-  padding: 8px 0;
-}
-.menu-items {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.menu-item {
-  font-size: clamp(42px, 12vw, 64px);
-  font-weight: 200;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: #000;
-  padding: 12px 0;
-  border-top: 1px solid #e8e8e8;
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  transition: color 200ms ease;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-}
-.menu-item:last-child { border-bottom: 1px solid #e8e8e8; }
-.menu-item:active { color: #aaa; }
-.menu-item-num {
-  font-family: "Geist Mono", monospace;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  color: #bbb;
-  margin-bottom: 2px;
-  flex-shrink: 0;
-}
-.menu-footer {
-  margin-top: 32px;
-  font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.2em;
-  color: #ccc;
-  text-transform: uppercase;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   ABOUT — language selection
-═══════════════════════════════════════════════════════════════════════════ */
-#screenAbout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
-.about-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  height: 44px;
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid #000;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 12px;
-  flex-shrink: 0;
-}
-.about-header-pill {
-  width: 4px; height: 18px;
+  bottom: max(env(safe-area-inset-bottom,0px), 40px);
+  left: 50%; transform: translateX(-50%);
+  z-index: 200;
+  width: 56px; height: 32px;
   border-radius: 9999px;
-  flex-shrink: 0;
-  background: linear-gradient(to bottom,
-    #ffb7c8, #ffd99a, #b6ffc3, #a5e4ff, #b0b8ff, #e0a8ff, #ffb7c8
-  );
-  background-size: 100% 600%;
-  animation: flow 22s linear infinite;
-  filter: saturate(1.4);
-}
-.about-header-title {
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-.about-header-back {
-  margin-left: auto;
+  border: none;
+  background: #f0f0f0;
   display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; color: #000;
+  transition: background 220ms ease;
 }
-.about-header-back svg { width: 18px; height: 18px; display: block; }
-.about-header-back:active { opacity: 0.35; }
+.fab.open { background: #e0e0e0; }
 
-/* Language grid ─────────────────────────────────────────────────────────── */
-.lang-intro {
-  padding: 40px 24px 28px;
-  border-bottom: 1px solid #f0f0f0;
+.fab-cross {
+  position: relative; z-index: 1;
+  width: 14px; height: 14px;
+  transition: transform 340ms cubic-bezier(0.22,1,0.36,1);
 }
-.lang-intro-label {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: #aaa;
-  margin-bottom: 10px;
-}
-.lang-intro-text {
-  font-size: 22px;
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: #000;
-}
-
-.lang-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  flex: 1;
-}
-.lang-btn {
-  padding: 22px 20px 20px;
-  border-right: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 160ms ease;
-  /* Press feel */
-  transform: scale(1);
-  transition: transform 120ms ease, background 120ms ease;
-  position: relative;
-  overflow: hidden;
-}
-.lang-btn:nth-child(even) { border-right: none; }
-.lang-btn:active {
-  background: #f5f5f5;
-  transform: scale(0.97);
-}
-/* ripple */
-.lang-btn::after {
+.fab-cross::before,
+.fab-cross::after {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at var(--rx,50%) var(--ry,50%), rgba(0,0,0,0.06) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 400ms ease;
-  pointer-events: none;
+  background: #222;
+  border-radius: 0.5px;
+  transition: transform 340ms cubic-bezier(0.22,1,0.36,1);
 }
-.lang-btn.pressed::after { opacity: 1; }
+.fab-cross::before {
+  width: 14px; height: 1.8px;
+  top: 50%; left: 0; transform: translateY(-50%);
+}
+.fab-cross::after {
+  width: 1.8px; height: 14px;
+  top: 0; left: 50%; transform: translateX(-50%);
+}
+.fab.open .fab-cross { transform: rotate(45deg); }
 
-.lang-native {
-  font-size: clamp(18px, 5.5vw, 26px);
+/* ─── Pop-up menu — same grey pill quality ───────────────────────────────── */
+.fab-menu {
+  position: fixed;
+  bottom: max(env(safe-area-inset-bottom,0px), 84px);
+  left: 50%; transform: translateX(-50%) translateY(8px) scale(0.96);
+  transform-origin: bottom center;
+  z-index: 199;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: none;
+  background: #f0f0f0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 260ms ease, transform 300ms cubic-bezier(0.22,1,0.36,1);
+}
+.fab-menu.open {
+  opacity: 1; pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.fab-menu-inner {
+  display: flex;
+}
+.fab-menu-item {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+  padding: 11px 22px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 130ms ease;
+  /* subtle divider between items, same grey family */
+  border-right: 1px solid rgba(0,0,0,0.08);
+  color: #222;
+}
+.fab-menu-item:last-child { border-right: none; }
+.fab-menu-item:active { background: #e0e0e0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ABOUT — pure typographic composition, no scroll
+   Back button top-right. Words tight together, black dot between each.
+═══════════════════════════════════════════════════════════════════════════ */
+.about-back {
+  position: absolute;
+  top: 0; right: 0;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10;
+  color: #000;
+  -webkit-tap-highlight-color: transparent;
+}
+.about-back svg { width: 20px; height: 20px; display: block; }
+.about-back:active { opacity: 0.35; }
+
+.lang-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* centre the whole cluster vertically */
+  padding: 40px 0 40px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Each row: word + dot below (except last) */
+.lang-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 32px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 180ms ease;
+}
+.lang-item:active { opacity: 0.4; }
+
+.lang-word {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 300;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1;
   color: #000;
 }
-.lang-roman {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #bbb;
-}
-.lang-region {
-  font-family: "Geist Mono", monospace;
-  font-size: 7px;
-  letter-spacing: 0.1em;
-  color: #ddd;
-  margin-top: 2px;
-}
 
-.about-footer {
-  border-top: 1px solid #000;
-  padding: 20px 20px max(env(safe-area-inset-bottom,0px), 20px);
-  display: flex; align-items: center;
+/* Black dot separator between words */
+.lang-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #000;
+  margin: 8px 0 8px 2px;
   flex-shrink: 0;
 }
-.about-footer-copy {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.2em; color: #ccc; text-transform: uppercase;
-}
+/* last item has no dot — handled in JS */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ARCHIVE
 ═══════════════════════════════════════════════════════════════════════════ */
-#screenArchive {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
 .arch-header {
   position: sticky; top: 0; z-index: 50;
   height: 44px;
-  background: rgba(255,255,255,0.96);
+  background: rgba(255,255,255,.96);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid #000;
-  display: flex; align-items: center;
-  padding: 0 16px; gap: 10px;
+  display: flex; align-items: center; padding: 0 16px; gap: 10px;
   flex-shrink: 0;
 }
 .arch-header-pill {
   width: 4px; height: 18px; border-radius: 9999px; flex-shrink: 0;
   background: linear-gradient(to bottom,
-    #ffb7c8, #ffd99a, #b6ffc3, #a5e4ff, #b0b8ff, #e0a8ff, #ffb7c8);
+    #ffb7c8,#ffd99a,#b6ffc3,#a5e4ff,#b0b8ff,#e0a8ff,#ffb7c8);
   background-size: 100% 600%;
   animation: flow 22s linear infinite; filter: saturate(1.4);
 }
@@ -375,14 +240,11 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   font-family: "Geist Mono", monospace;
   font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
 }
-.view-toggle {
-  margin-left: auto; display: flex; align-items: center; gap: 2px;
-}
+.view-toggle { margin-left: auto; display: flex; gap: 2px; }
 .vtbtn {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 4px; color: #ccc;
-  transition: color 150ms ease;
+  border-radius: 4px; color: #ccc; transition: color 150ms;
 }
 .vtbtn.active { color: #000; }
 .vtbtn svg { width: 15px; height: 15px; display: block; }
@@ -394,33 +256,39 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 .arch-header-back:active { opacity: 0.4; }
 
 /* Grid */
-#gridView { display: grid; grid-template-columns: 1fr 1fr; }
+#gridView {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-left: 1px solid #e8e8e8;
+  border-top: 1px solid #e8e8e8;
+}
 #gridView.hidden { display: none; }
 .grid-cell {
-  border-right: 1px solid #ebebeb; border-bottom: 1px solid #ebebeb;
-  cursor: pointer; background: #fafafa;
-  display: flex; flex-direction: column;
-  transition: background 120ms ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.grid-cell:nth-child(even) { border-right: none; }
-.grid-cell:active { background: #f0f0f0; }
-.grid-img {
-  width: 100%; aspect-ratio: 1/1;
+  border-right: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
   background: #fafafa;
-  display: flex; align-items: center; justify-content: center;
-  border-bottom: 1px solid #ebebeb;
+  display: flex; flex-direction: column;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease;
+  position: relative; overflow: hidden;
 }
-.grid-img-q {
-  font-size: clamp(28px, 9vw, 48px); font-weight: 200;
-  color: #ccc; user-select: none;
+.grid-cell:active { background: #f0f0f0; }
+.grid-media {
+  width: 100%; aspect-ratio: 1/1;
+  border-bottom: 1px solid #e8e8e8;
+  background: #f4f4f4;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.grid-media img, .grid-media video, .grid-media canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.grid-media-placeholder {
+  font-size: clamp(24px,7vw,40px); font-weight: 200;
+  color: #d0d0d0; user-select: none; position: relative; z-index: 1;
 }
 .grid-meta { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 5px; }
-.grid-tag {
-  font-family: "Geist Mono", monospace; font-size: 8px;
-  letter-spacing: 0.12em; text-transform: uppercase; color: #aaa;
-}
-.grid-name { font-size: 14px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
+.grid-tag { font-family: "Geist Mono", monospace; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #aaa; }
+.grid-name { font-size: 13px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
 .grid-num { font-family: "Geist Mono", monospace; font-size: 8px; color: #ccc; margin-top: 2px; }
 
 /* List */
@@ -429,37 +297,29 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 .project-row {
   border-bottom: 1px solid #ebebeb;
   display: grid; grid-template-columns: 44px 1fr 18px;
-  align-items: center; min-height: 48px;
-  padding: 0 16px 0 0; cursor: pointer;
-  transition: background 120ms ease;
-  -webkit-tap-highlight-color: transparent;
+  align-items: center; min-height: 48px; padding: 0 16px 0 0;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 120ms;
 }
 .project-row:active { background: #f8f8f8; }
-.row-num {
-  padding-left: 20px; font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.06em; color: #ccc; white-space: nowrap;
-}
+.row-num { padding-left: 20px; font-family: "Geist Mono", monospace; font-size: 9px; letter-spacing: 0.06em; color: #ccc; white-space: nowrap; }
 .row-name { font-size: 13px; padding: 14px 10px 14px 0; line-height: 1.3; }
 .row-arrow { font-family: "Geist Mono", monospace; font-size: 10px; color: #ddd; text-align: right; }
 
 .arch-footer {
   border-top: 1px solid #000; margin-top: auto;
-  padding: 20px 20px max(env(safe-area-inset-bottom,0px), 20px);
+  padding: 20px 20px max(env(safe-area-inset-bottom,0px),20px);
   display: flex; align-items: center; flex-shrink: 0;
 }
-.arch-footer-copy {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #ccc;
-}
+.arch-footer-copy { font-family: "Geist Mono", monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #ccc; }
 .arch-footer-yr { margin-left: auto; font-family: "Geist Mono", monospace; font-size: 8px; color: #ccc; }
 
-/* ─── DETAIL overlay ──────────────────────────────────────────────────────── */
+/* ─── DETAIL ─────────────────────────────────────────────────────────────── */
 #detail {
   position: fixed; inset: 0; z-index: 400;
-  background: #fff;
-  display: flex; flex-direction: column;
+  background: #fff; display: flex; flex-direction: column;
   transform: translateY(100%);
-  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 480ms cubic-bezier(0.22,1,0.36,1);
   overflow: hidden;
 }
 #detail.open { transform: translateY(0); }
@@ -467,98 +327,64 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   height: 52px; border-bottom: 1px solid #000;
   display: flex; align-items: center; padding: 0 20px; gap: 14px; flex-shrink: 0;
 }
-.detail-back {
-  font-family: "Geist Mono", monospace; font-size: 11px; color: #000; padding: 8px 0;
-}
+.detail-back { font-family: "Geist Mono", monospace; font-size: 11px; color: #000; padding: 8px 0; }
 .detail-back:active { opacity: 0.4; }
-.detail-header-num {
-  font-family: "Geist Mono", monospace; font-size: 9px; color: #bbb; margin-left: auto;
-}
+.detail-header-num { font-family: "Geist Mono", monospace; font-size: 9px; color: #bbb; margin-left: auto; }
 .detail-tile {
   flex: 0 0 auto; width: 100%; aspect-ratio: 1/1;
-  border-bottom: 1px solid #000; background: #fff;
-  display: flex; align-items: center; justify-content: center; position: relative;
+  border-bottom: 1px solid #000; background: #fafafa;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
 }
-.detail-tile-q {
-  font-size: clamp(64px, 22vw, 120px); font-weight: 200;
-  color: #000; letter-spacing: -0.04em; line-height: 1; user-select: none;
+.detail-tile img, .detail-tile video, .detail-tile canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
 }
-.detail-tile::before,.detail-tile::after {
-  content: ""; position: absolute; width: 10px; height: 10px;
-  border-color: #ddd; border-style: solid;
-}
-.detail-tile::before { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
-.detail-tile::after  { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
-.detail-meta { padding: 24px 20px; flex: 1; overflow-y: auto; }
+.detail-tile-q { font-size: clamp(64px,22vw,120px); font-weight: 200; color: #000; letter-spacing: -0.04em; line-height: 1; user-select: none; }
+.detail-tile::before,.detail-tile::after { content:""; position:absolute; width:10px; height:10px; border-color:#ddd; border-style:solid; }
+.detail-tile::before { top:12px; left:12px; border-width:1px 0 0 1px; }
+.detail-tile::after  { bottom:12px; right:12px; border-width:0 1px 1px 0; }
+.detail-meta { padding: 24px 20px; flex:1; overflow-y:auto; }
 .detail-name { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.1; }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.detail-tag {
-  font-family: "Geist Mono", monospace; font-size: 8px; letter-spacing: 0.14em;
-  text-transform: uppercase; border: 1px solid #e0e0e0; padding: 4px 8px; color: #999; border-radius: 2px;
-}
+.detail-tag { font-family:"Geist Mono",monospace; font-size:8px; letter-spacing:0.14em; text-transform:uppercase; border:1px solid #e0e0e0; padding:4px 8px; color:#999; border-radius:2px; }
 
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+@media (prefers-reduced-motion:reduce) {
+  * { animation-duration:.01ms!important; transition-duration:.01ms!important; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══ LANDING ════════════════════════════════════════════════════════════ -->
+<!-- ══ LANDING ══════════════════════════════════════════════════════════════ -->
 <div id="screenLanding" class="screen active">
   <div class="rainbow-pill" aria-hidden="true"></div>
 </div>
 
-<!-- MENU button (always visible over landing) -->
-<button class="menu-btn" id="menuBtn" aria-label="Menu">
-  <div class="menu-btn-line"></div>
-  <span>Menu</span>
+<!-- FAB -->
+<button class="fab" id="fab" aria-label="Open menu" aria-expanded="false">
+  <span class="fab-cross"></span>
 </button>
 
-<!-- ══ MENU OVERLAY ═══════════════════════════════════════════════════════ -->
-<div id="menuOverlay" role="dialog" aria-modal="true" aria-label="Navigation">
-  <button class="menu-close" id="menuClose">Close</button>
-  <nav class="menu-items">
-    <div class="menu-item" data-target="about" tabindex="0">
-      <span class="menu-item-num">01</span>About
-    </div>
-    <div class="menu-item" data-target="archive" tabindex="0">
-      <span class="menu-item-num">02</span>Project
-    </div>
-    <div class="menu-item" data-target="other" tabindex="0">
-      <span class="menu-item-num">03</span>Other
-    </div>
-  </nav>
-  <p class="menu-footer">Sovereign Archive · MMXXVI</p>
+<!-- Pop-up menu -->
+<div class="fab-menu" id="fabMenu" role="menu">
+  <div class="fab-menu-inner">
+    <div class="fab-menu-item" data-target="about"   role="menuitem" tabindex="-1">About</div>
+    <div class="fab-menu-item" data-target="archive" role="menuitem" tabindex="-1">Project</div>
+    <div class="fab-menu-item" data-target="other"   role="menuitem" tabindex="-1">Other</div>
+  </div>
 </div>
 
-<!-- ══ ABOUT ══════════════════════════════════════════════════════════════ -->
+<!-- ══ ABOUT — pure typographic screen ══════════════════════════════════════ -->
 <div id="screenAbout" class="screen">
-  <header class="about-header">
-    <div class="about-header-pill" aria-hidden="true"></div>
-    <span class="about-header-title">About</span>
-    <button class="about-header-back" id="aboutBack" aria-label="Back">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
-    </button>
-  </header>
-
-  <div class="lang-intro">
-    <p class="lang-intro-label">Language · 言語</p>
-    <p class="lang-intro-text">Select your<br>language.</p>
-  </div>
-
-  <div class="lang-grid" id="langGrid">
-    <!-- filled by JS -->
-  </div>
-
-  <footer class="about-footer">
-    <span class="about-footer-copy">© MMXXVI · Sovereign Archive</span>
-  </footer>
+  <button class="about-back" id="aboutBack" aria-label="Back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </button>
+  <div class="lang-stack" id="langStack"></div>
 </div>
 
-<!-- ══ ARCHIVE ════════════════════════════════════════════════════════════ -->
+<!-- ══ ARCHIVE ══════════════════════════════════════════════════════════════ -->
 <div id="screenArchive" class="screen">
   <header class="arch-header">
     <div class="arch-header-pill" aria-hidden="true"></div>
@@ -584,24 +410,22 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
       </svg>
     </button>
   </header>
-
   <div id="gridView"></div>
   <ul id="listView" class="hidden"></ul>
-
   <footer class="arch-footer">
     <span class="arch-footer-copy">© MMXXVI</span>
     <span class="arch-footer-yr">001 — 100</span>
   </footer>
 </div>
 
-<!-- ══ DETAIL ════════════════════════════════════════════════════════════ -->
+<!-- ══ DETAIL ═══════════════════════════════════════════════════════════════ -->
 <div id="detail">
   <div class="detail-header">
     <button class="detail-back" id="detailBack">← Back</button>
     <span class="detail-header-num" id="detailNum">#001</span>
   </div>
-  <div class="detail-tile">
-    <span class="detail-tile-q">?</span>
+  <div class="detail-tile" id="detailTile">
+    <span class="detail-tile-q" id="detailQ">?</span>
   </div>
   <div class="detail-meta">
     <div class="detail-name" id="detailName">Project</div>
@@ -610,109 +434,106 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 </div>
 
 <script>
-/* ─── Screen manager ──────────────────────────────────────────────────────── */
+/* ─── Screen router ──────────────────────────────────────────────────────── */
 const screens = {
   landing: document.getElementById("screenLanding"),
   about:   document.getElementById("screenAbout"),
   archive: document.getElementById("screenArchive"),
 };
-const menuBtn     = document.getElementById("menuBtn");
-const menuOverlay = document.getElementById("menuOverlay");
-const menuClose   = document.getElementById("menuClose");
-
 let currentScreen = "landing";
 
 function showScreen(name) {
-  // deactivate all
   Object.values(screens).forEach(s => s.classList.remove("active"));
-  // show menu btn only on landing
-  menuBtn.style.display = (name === "landing") ? "" : "none";
-  // activate target
   if (screens[name]) {
     screens[name].classList.add("active");
-    // reset scroll
-    screens[name].scrollTop = 0;
+    if (screens[name].scrollTop !== undefined) screens[name].scrollTop = 0;
     currentScreen = name;
   }
-  closeMenu();
+  closeFab();
+  fab.style.display = (name === "landing") ? "" : "none";
 }
 
-/* ─── Menu ────────────────────────────────────────────────────────────────── */
-function openMenu() {
-  menuOverlay.classList.add("open");
-  menuBtn.style.display = "none";
+/* ─── FAB ────────────────────────────────────────────────────────────────── */
+const fab     = document.getElementById("fab");
+const fabMenu = document.getElementById("fabMenu");
+let fabOpen   = false;
+
+function openFab() {
+  fabOpen = true;
+  fab.classList.add("open");
+  fabMenu.classList.add("open");
+  fab.setAttribute("aria-expanded","true");
 }
-function closeMenu() {
-  menuOverlay.classList.remove("open");
-  if (currentScreen === "landing") menuBtn.style.display = "";
+function closeFab() {
+  fabOpen = false;
+  fab.classList.remove("open");
+  fabMenu.classList.remove("open");
+  fab.setAttribute("aria-expanded","false");
 }
 
-menuBtn.addEventListener("click", openMenu);
-menuClose.addEventListener("click", closeMenu);
+fab.addEventListener("click", () => fabOpen ? closeFab() : openFab());
 
-menuOverlay.querySelectorAll(".menu-item").forEach(item => {
+fabMenu.querySelectorAll(".fab-menu-item").forEach(item => {
   item.addEventListener("click", () => {
     const t = item.dataset.target;
-    if (t === "other") { closeMenu(); return; } // placeholder
+    if (t === "other") { closeFab(); return; }
     showScreen(t);
   });
 });
 
-// Back buttons
-document.getElementById("aboutBack").addEventListener("click", () => showScreen("landing"));
-document.getElementById("archBack").addEventListener("click",  () => showScreen("landing"));
+document.addEventListener("click", e => {
+  if (fabOpen && !fab.contains(e.target) && !fabMenu.contains(e.target)) closeFab();
+}, { capture: true });
 
-/* ─── Language data ───────────────────────────────────────────────────────── */
-const LANGUAGES = [
-  { native: "English",    roman: "English",    region: "Global" },
-  { native: "日本語",     roman: "Japanese",   region: "Japan" },
-  { native: "中文",       roman: "Chinese",    region: "China · Taiwan" },
-  { native: "한국어",     roman: "Korean",     region: "Korea" },
-  { native: "Español",    roman: "Spanish",    region: "LatAm · Spain" },
-  { native: "Português",  roman: "Portuguese", region: "Brazil · Portugal" },
-  { native: "Français",   roman: "French",     region: "France · Africa" },
-  { native: "Deutsch",    roman: "German",     region: "Germany · Austria" },
-  { native: "Italiano",   roman: "Italian",    region: "Italy" },
-  { native: "العربية",    roman: "Arabic",     region: "Middle East" },
-  { native: "हिन्दी",    roman: "Hindi",      region: "India" },
-  { native: "Русский",    roman: "Russian",    region: "Russia" },
-  { native: "Türkçe",     roman: "Turkish",    region: "Turkey" },
-  { native: "Polski",     roman: "Polish",     region: "Poland" },
-  { native: "Nederlands", roman: "Dutch",      region: "Netherlands" },
-  { native: "Svenska",    roman: "Swedish",    region: "Scandinavia" },
+/* ─── About: back button ─────────────────────────────────────────────────── */
+document.getElementById("aboutBack").addEventListener("click", () => showScreen("landing"));
+
+/* ─── About: greeting stack ──────────────────────────────────────────────── */
+const LANGS = [
+  { word: "Hello",       scale: 1.00 },   // EN
+  { word: "こんにちは",   scale: 0.76 },   // JA
+  { word: "你好",         scale: 1.18 },   // ZH
+  { word: "안녕하세요",   scale: 0.70 },   // KO
+  { word: "Hola",        scale: 1.02 },   // ES
+  { word: "Привет",      scale: 0.90 },   // RU
+  { word: "Bonjour",     scale: 0.84 },   // FR
+  { word: "Hallo",       scale: 1.00 },   // DE
 ];
 
-const langGrid = document.getElementById("langGrid");
-LANGUAGES.forEach(lang => {
-  const btn = document.createElement("div");
-  btn.className = "lang-btn";
-  btn.setAttribute("role", "button");
-  btn.setAttribute("tabindex", "0");
-  btn.innerHTML = `
-    <span class="lang-native">${lang.native}</span>
-    <span class="lang-roman">${lang.roman}</span>
-    <span class="lang-region">${lang.region}</span>
-  `;
-  // press ripple
-  btn.addEventListener("pointerdown", e => {
-    const r = btn.getBoundingClientRect();
-    btn.style.setProperty("--rx", ((e.clientX - r.left) / r.width * 100) + "%");
-    btn.style.setProperty("--ry", ((e.clientY - r.top) / r.height * 100) + "%");
-    btn.classList.add("pressed");
-    setTimeout(() => btn.classList.remove("pressed"), 500);
-  });
-  langGrid.appendChild(btn);
+const BASE_FS = "clamp(30px, 9vw, 54px)";
+
+const stack = document.getElementById("langStack");
+LANGS.forEach((l, i) => {
+  const item = document.createElement("div");
+  item.className = "lang-item";
+  item.setAttribute("role", "button");
+  item.setAttribute("tabindex", "0");
+
+  const word = document.createElement("span");
+  word.className = "lang-word";
+  word.textContent = l.word;
+  word.style.fontSize = `calc(${BASE_FS} * ${l.scale})`;
+  item.appendChild(word);
+
+  // Black dot after every word except the last
+  if (i < LANGS.length - 1) {
+    const dot = document.createElement("span");
+    dot.className = "lang-dot";
+    item.appendChild(dot);
+  }
+
+  stack.appendChild(item);
 });
 
-/* ─── Project data ────────────────────────────────────────────────────────── */
+/* ─── Project data ───────────────────────────────────────────────────────── */
 const TOTAL = 100;
-const pad3  = n => String(n).padStart(3, "0");
+const pad3  = n => String(n).padStart(3,"0");
 const TAG_POOL = [
   "Ongoing","Archive","Research","Object","System","Field",
   "Index","Surface","Form","Light","Time","Space",
   "Signal","Territory","Currency","Sovereign","Material","Network","Protocol","Fragment"
 ];
-function deterministicTags(seed, count = 3) {
+function deterministicTags(seed, count=3) {
   let h = (seed * 2654435761) >>> 0;
   const pool = [...TAG_POOL], out = [];
   for (let i = 0; i < count; i++) {
@@ -721,28 +542,77 @@ function deterministicTags(seed, count = 3) {
   }
   return out;
 }
-const projects = Array.from({ length: TOTAL }, (_, i) => ({
-  n: i + 1, name: `Project ${pad3(i+1)}`, tags: deterministicTags(i+1, 3),
+
+/*
+  Media map — assign media to project slots:
+  MEDIA[1] = { type:"image", src:"./path/to/file.jpg" }
+  MEDIA[2] = { type:"video", src:"./path/to/file.mp4" }
+  MEDIA[3] = { type:"3d",   init: canvas => { // Three.js setup here
+  } }
+*/
+const MEDIA = {};
+
+const projects = Array.from({length: TOTAL}, (_, i) => ({
+  n: i+1,
+  name: `Project ${pad3(i+1)}`,
+  tags: deterministicTags(i+1, 3),
+  media: MEDIA[i+1] || null,
 }));
 
-/* ─── Build archive ───────────────────────────────────────────────────────── */
+function buildMedia(m, container) {
+  container.innerHTML = "";
+  if (!m) {
+    const q = document.createElement("span");
+    q.className = "grid-media-placeholder";
+    q.textContent = "?";
+    container.appendChild(q);
+    return;
+  }
+  if (m.type === "image") {
+    const img = document.createElement("img");
+    img.src = m.src; img.alt = ""; img.loading = "lazy";
+    container.appendChild(img);
+  } else if (m.type === "video") {
+    const vid = document.createElement("video");
+    vid.src = m.src; vid.muted = true; vid.loop = true;
+    vid.playsInline = true; vid.autoplay = true;
+    container.appendChild(vid);
+    vid.play().catch(() => {});
+  } else if (m.type === "3d" && typeof m.init === "function") {
+    const canvas = document.createElement("canvas");
+    container.appendChild(canvas);
+    m.init(canvas);
+  }
+}
+
+/* ─── Build archive ──────────────────────────────────────────────────────── */
 const gridView = document.getElementById("gridView");
 const listView = document.getElementById("listView");
 
 projects.forEach(p => {
+  // Grid cell
   const cell = document.createElement("div");
-  cell.className = "grid-cell"; cell.dataset.idx = p.n - 1;
-  cell.innerHTML = `
-    <div class="grid-img"><span class="grid-img-q">?</span></div>
-    <div class="grid-meta">
-      <span class="grid-tag">${p.tags[0]}</span>
-      <span class="grid-name">${p.name}</span>
-      <span class="grid-num">#${pad3(p.n)}</span>
-    </div>`;
+  cell.className = "grid-cell";
+  cell.dataset.idx = p.n - 1;
+
+  const mediaDiv = document.createElement("div");
+  mediaDiv.className = "grid-media";
+  buildMedia(p.media, mediaDiv);
+  cell.appendChild(mediaDiv);
+
+  const meta = document.createElement("div");
+  meta.className = "grid-meta";
+  meta.innerHTML = `
+    <span class="grid-tag">${p.tags[0]}</span>
+    <span class="grid-name">${p.name}</span>
+    <span class="grid-num">#${pad3(p.n)}</span>`;
+  cell.appendChild(meta);
   gridView.appendChild(cell);
 
+  // List row
   const li = document.createElement("li");
-  li.className = "project-row"; li.dataset.idx = p.n - 1;
+  li.className = "project-row";
+  li.dataset.idx = p.n - 1;
   li.innerHTML = `
     <span class="row-num">#${pad3(p.n)}</span>
     <span class="row-name">${p.name}</span>
@@ -750,7 +620,7 @@ projects.forEach(p => {
   listView.appendChild(li);
 });
 
-/* ─── View toggle ─────────────────────────────────────────────────────────── */
+/* ─── View toggle ────────────────────────────────────────────────────────── */
 document.getElementById("btnGrid").addEventListener("click", () => {
   gridView.classList.remove("hidden"); listView.classList.add("hidden");
   document.getElementById("btnGrid").classList.add("active");
@@ -762,9 +632,12 @@ document.getElementById("btnList").addEventListener("click", () => {
   document.getElementById("btnGrid").classList.remove("active");
 });
 
-/* ─── Detail ──────────────────────────────────────────────────────────────── */
+/* ─── Detail ─────────────────────────────────────────────────────────────── */
+document.getElementById("archBack").addEventListener("click", () => showScreen("landing"));
+
 const detail     = document.getElementById("detail");
-const detailBack = document.getElementById("detailBack");
+const detailTile = document.getElementById("detailTile");
+const detailQ    = document.getElementById("detailQ");
 const detailNum  = document.getElementById("detailNum");
 const detailName = document.getElementById("detailName");
 const detailTags = document.getElementById("detailTags");
@@ -773,32 +646,31 @@ function openDetail(p) {
   detailNum.textContent  = `#${pad3(p.n)}`;
   detailName.textContent = p.name;
   detailTags.innerHTML   = p.tags.map(t => `<span class="detail-tag">${t}</span>`).join("");
+  detailTile.querySelectorAll("img,video,canvas").forEach(el => el.remove());
+  if (p.media) { detailQ.style.display = "none"; buildMedia(p.media, detailTile); }
+  else         { detailQ.style.display = ""; }
   detail.classList.add("open");
 }
-function closeDetail() {
-  detail.classList.remove("open");
-}
+function closeDetail() { detail.classList.remove("open"); }
 
 let tMoved = false;
-function tapSetup(el, onTap) {
-  el.addEventListener("touchstart", () => { tMoved = false; }, { passive: true });
-  el.addEventListener("touchmove",  () => { tMoved = true;  }, { passive: true });
+function addTapHandler(el, fn) {
+  el.addEventListener("touchstart", () => { tMoved = false; }, {passive: true});
+  el.addEventListener("touchmove",  () => { tMoved = true;  }, {passive: true});
   el.addEventListener("click", e => {
     if (tMoved) return;
     const cell = e.target.closest("[data-idx]");
     if (!cell) return;
-    onTap(projects[+cell.dataset.idx]);
+    fn(projects[+cell.dataset.idx]);
   });
 }
-tapSetup(gridView, openDetail);
-tapSetup(listView, openDetail);
+addTapHandler(gridView, openDetail);
+addTapHandler(listView, openDetail);
 
-detailBack.addEventListener("click", closeDetail);
+document.getElementById("detailBack").addEventListener("click", closeDetail);
 let swipeY = 0;
-detail.addEventListener("touchstart", e => { swipeY = e.touches[0].clientY; }, { passive: true });
-detail.addEventListener("touchend",   e => {
-  if (e.changedTouches[0].clientY - swipeY > 60) closeDetail();
-}, { passive: true });
+detail.addEventListener("touchstart", e => { swipeY = e.touches[0].clientY; }, {passive: true});
+detail.addEventListener("touchend",   e => { if (e.changedTouches[0].clientY - swipeY > 60) closeDetail(); }, {passive: true});
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
 </script>
 </body>
