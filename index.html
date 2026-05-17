@@ -1,457 +1,591 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="only light" />
-<meta name="theme-color" content="#ffffff" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="only light"/>
+<meta name="theme-color" content="#ffffff"/>
 <title>SOVEREIGN ARCHIVE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ── Reset ──────────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
-html, body {
-  margin: 0; padding: 0;
+/* ─── RESET ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  height: 100%;
+  /* kill scrollbar at html level */
+  overflow: hidden;
+}
+body {
+  height: 100%;
+  overflow: hidden;          /* no scroll, no scrollbar, ever */
   background: #fff;
   color: #000;
   font-family: "Geist", system-ui, sans-serif;
-  font-size: 13px;
-  line-height: 1;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
-  overflow-x: hidden;
 }
-a { color: inherit; text-decoration: none; }
 button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   LANDING
-═══════════════════════════════════════════════════════════════════════════ */
-#landing {
+/* ─── SCREENS ─────────────────────────────────────────────────────────────── */
+/* Every screen is position:fixed, inset:0 — only body needs no scroll */
+.screen {
   position: fixed;
   inset: 0;
-  z-index: 100;
   background: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  /* landing is always overflow:hidden — controlled by JS on body */
-  transition: opacity 600ms cubic-bezier(0.4, 0, 0.2, 1),
-              transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-#landing.dismissed {
-  opacity: 0;
-  transform: translateY(-12px);
-  pointer-events: none;
-}
-
-/* ── Ellipse object ─────────────────────────────────────────────────────────── */
-.rainbow-pill {
-  --pill-w: clamp(80px, 20vw, 120px);
-  --pill-h: clamp(240px, 52vh, 380px);
-  --border-t: 2px;
-  --pill-r: clamp(40px, 10vw, 60px);
-  width: var(--pill-w);
-  height: var(--pill-h);
-  border-radius: var(--pill-r);
-  position: relative;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  background: transparent;
-  animation: pill-pulse 3.2s ease-in-out infinite;
-}
-/* Outer rainbow fill */
-.rainbow-pill::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: var(--pill-r);
-  background: linear-gradient(
-    to bottom,
-    #d8d8dc 0%, #ffb7c8 9%, #ffd99a 18%, #fff5a2 28%,
-    #b6ffc3 38%, #a5e4ff 49%, #b0b8ff 59%, #e0a8ff 68%,
-    #ff9eb8 77%, #ffd28a 86%, #c6ffae 94%, #d8d8dc 100%
-  );
-  background-size: 100% 600%;
-  animation: flow 22s linear infinite;
-  filter: saturate(1.5) brightness(1.05);
-}
-/* White punch-out centre */
-.rainbow-pill::after {
-  content: "";
-  position: absolute;
-  inset: var(--border-t);
-  border-radius: calc(var(--pill-r) - var(--border-t));
-  background: #fff;
-}
-
-@keyframes flow {
-  0%   { background-position: 0% 0%; }
-  100% { background-position: 0% 600%; }
-}
-@keyframes pill-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.88; }
-}
-
-/* ── Landing cue ────────────────────────────────────────────────────────────── */
-.landing-cue {
-  margin-top: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  user-select: none;
-  animation: cue-fade 2s ease-in-out 1.2s both;
-}
-.landing-cue-line {
-  width: 1px; height: 32px;
-  background: linear-gradient(to bottom, #000, transparent);
-}
-.landing-cue-label {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #999;
-}
-@keyframes cue-fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.landing-count {
-  position: absolute;
-  bottom: max(env(safe-area-inset-bottom), 28px);
-  right: 24px;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  color: #bbb;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   ARCHIVE WRAPPER  (grid + list live inside here)
-═══════════════════════════════════════════════════════════════════════════ */
-#archive {
+  /* transition */
   opacity: 0;
   pointer-events: none;
-  min-height: 100dvh;
-  transition: opacity 500ms ease 200ms;
+  transition: opacity 500ms cubic-bezier(0.4, 0, 0.2, 1),
+              transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-#archive.visible {
+.screen.active {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* ── Sticky header ──────────────────────────────────────────────────────────── */
-.arch-header {
+/* archive & about screens scroll internally */
+#screenArchive,
+#screenAbout {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* slide-up entry */
+  transform: translateY(20px);
+}
+#screenArchive.active,
+#screenAbout.active {
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING
+═══════════════════════════════════════════════════════════════════════════ */
+#screenLanding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ── Rainbow ellipse ─────────────────────────────────────────────────────── */
+.rainbow-pill {
+  --w: clamp(78px, 19vw, 112px);
+  --h: clamp(230px, 50vh, 370px);
+  --r: clamp(38px, 9vw, 56px);
+  --stroke: 1.8px;
+  width: var(--w);
+  height: var(--h);
+  border-radius: var(--r);
+  position: relative;
+  animation: pill-breathe 4s ease-in-out infinite;
+}
+.rainbow-pill::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: var(--r);
+  background: linear-gradient(
+    to bottom,
+    #d8d8dc 0%, #ffb7c8 9%, #ffd99a 18%, #fff5a2 27%,
+    #b6ffc3 37%, #a5e4ff 48%, #b0b8ff 58%, #e0a8ff 68%,
+    #ff9eb8 77%, #ffd28a 86%, #c6ffae 94%, #d8d8dc 100%
+  );
+  background-size: 100% 600%;
+  animation: flow 22s linear infinite;
+  filter: saturate(1.5) brightness(1.04);
+}
+.rainbow-pill::after {
+  content: "";
+  position: absolute;
+  inset: var(--stroke);
+  border-radius: calc(var(--r) - var(--stroke));
+  background: #fff;
+}
+@keyframes flow {
+  to { background-position: 0% 600%; }
+}
+@keyframes pill-breathe {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.82; }
+}
+
+/* ── MENU button ─────────────────────────────────────────────────────────── */
+.menu-btn {
+  position: fixed;
+  right: 24px;
+  bottom: max(env(safe-area-inset-bottom, 0px), 32px);
+  z-index: 10;
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #000;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: auto;
+}
+.menu-btn-line {
+  width: 1px;
+  height: 20px;
+  background: #000;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MENU OVERLAY  (full-screen, slides in from bottom)
+═══════════════════════════════════════════════════════════════════════════ */
+#menuOverlay {
+  position: fixed; inset: 0;
+  z-index: 300;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 32px max(env(safe-area-inset-bottom, 0px), 48px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+  transition: opacity 400ms ease, transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#menuOverlay.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.menu-close {
+  position: absolute;
+  top: max(env(safe-area-inset-top, 0px), 20px);
+  right: 24px;
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #bbb;
+  padding: 8px 0;
+}
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.menu-item {
+  font-size: clamp(42px, 12vw, 64px);
+  font-weight: 200;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #000;
+  padding: 12px 0;
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  transition: color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.menu-item:last-child { border-bottom: 1px solid #e8e8e8; }
+.menu-item:active { color: #aaa; }
+.menu-item-num {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: #bbb;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+.menu-footer {
+  margin-top: 32px;
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: #ccc;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ABOUT — language selection
+═══════════════════════════════════════════════════════════════════════════ */
+#screenAbout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.about-header {
   position: sticky;
   top: 0;
   z-index: 50;
+  height: 44px;
   background: rgba(255,255,255,0.96);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid #000;
-  height: 44px;
   display: flex;
   align-items: center;
-  padding: 0 16px 0 16px;
-  gap: 10px;
+  padding: 0 20px;
+  gap: 12px;
+  flex-shrink: 0;
 }
-/* Mini pill */
-.arch-header-pill {
-  width: 4px; height: 20px;
+.about-header-pill {
+  width: 4px; height: 18px;
   border-radius: 9999px;
   flex-shrink: 0;
-  background: linear-gradient(
-    to bottom,
-    #ffb7c8, #ffd99a, #fff5a2, #b6ffc3, #a5e4ff, #b0b8ff, #e0a8ff, #ffb7c8
+  background: linear-gradient(to bottom,
+    #ffb7c8, #ffd99a, #b6ffc3, #a5e4ff, #b0b8ff, #e0a8ff, #ffb7c8
   );
   background-size: 100% 600%;
   animation: flow 22s linear infinite;
   filter: saturate(1.4);
 }
-.arch-header-title {
+.about-header-title {
   font-family: "Geist Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
 }
-/* View-toggle buttons */
-.view-toggle {
+.about-header-back {
   margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; color: #000;
+}
+.about-header-back svg { width: 18px; height: 18px; display: block; }
+.about-header-back:active { opacity: 0.35; }
+
+/* Language grid ─────────────────────────────────────────────────────────── */
+.lang-intro {
+  padding: 40px 24px 28px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.lang-intro-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+.lang-intro-text {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #000;
+}
+
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+}
+.lang-btn {
+  padding: 22px 20px 20px;
+  border-right: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
-  align-items: center;
-  gap: 2px;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease;
+  /* Press feel */
+  transform: scale(1);
+  transition: transform 120ms ease, background 120ms ease;
+  position: relative;
+  overflow: hidden;
+}
+.lang-btn:nth-child(even) { border-right: none; }
+.lang-btn:active {
+  background: #f5f5f5;
+  transform: scale(0.97);
+}
+/* ripple */
+.lang-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--rx,50%) var(--ry,50%), rgba(0,0,0,0.06) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+.lang-btn.pressed::after { opacity: 1; }
+
+.lang-native {
+  font-size: clamp(18px, 5.5vw, 26px);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: #000;
+}
+.lang-roman {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #bbb;
+}
+.lang-region {
+  font-family: "Geist Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  color: #ddd;
+  margin-top: 2px;
+}
+
+.about-footer {
+  border-top: 1px solid #000;
+  padding: 20px 20px max(env(safe-area-inset-bottom,0px), 20px);
+  display: flex; align-items: center;
+  flex-shrink: 0;
+}
+.about-footer-copy {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.2em; color: #ccc; text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARCHIVE
+═══════════════════════════════════════════════════════════════════════════ */
+#screenArchive {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.arch-header {
+  position: sticky; top: 0; z-index: 50;
+  height: 44px;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #000;
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 10px;
+  flex-shrink: 0;
+}
+.arch-header-pill {
+  width: 4px; height: 18px; border-radius: 9999px; flex-shrink: 0;
+  background: linear-gradient(to bottom,
+    #ffb7c8, #ffd99a, #b6ffc3, #a5e4ff, #b0b8ff, #e0a8ff, #ffb7c8);
+  background-size: 100% 600%;
+  animation: flow 22s linear infinite; filter: saturate(1.4);
+}
+.arch-header-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+}
+.view-toggle {
+  margin-left: auto; display: flex; align-items: center; gap: 2px;
 }
 .vtbtn {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 4px;
-  color: #bbb;
-  transition: color 150ms ease, background 150ms ease;
+  border-radius: 4px; color: #ccc;
+  transition: color 150ms ease;
 }
 .vtbtn.active { color: #000; }
-.vtbtn svg { width: 16px; height: 16px; display: block; }
-/* Back arrow */
+.vtbtn svg { width: 15px; height: 15px; display: block; }
 .arch-header-back {
   display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px;
-  color: #000;
-  margin-left: 4px;
+  width: 30px; height: 30px; color: #000; margin-left: 4px;
 }
 .arch-header-back svg { width: 18px; height: 18px; display: block; }
 .arch-header-back:active { opacity: 0.4; }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   GRID VIEW  (klikkentheke-style 2-col)
-═══════════════════════════════════════════════════════════════════════════ */
-#gridView {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: none;
-}
+/* Grid */
+#gridView { display: grid; grid-template-columns: 1fr 1fr; }
 #gridView.hidden { display: none; }
-
 .grid-cell {
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  background: #f9f9f9;
-  display: flex;
-  flex-direction: column;
+  border-right: 1px solid #ebebeb; border-bottom: 1px solid #ebebeb;
+  cursor: pointer; background: #fafafa;
+  display: flex; flex-direction: column;
   transition: background 120ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .grid-cell:nth-child(even) { border-right: none; }
 .grid-cell:active { background: #f0f0f0; }
-
-/* Image area — square placeholder with ? */
 .grid-img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  background: #f9f9f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #e0e0e0;
-  position: relative;
-  overflow: hidden;
+  width: 100%; aspect-ratio: 1/1;
+  background: #fafafa;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid #ebebeb;
 }
 .grid-img-q {
-  font-family: "Geist", sans-serif;
-  font-size: clamp(32px, 10vw, 52px);
-  font-weight: 300;
-  color: #ccc;
-  user-select: none;
+  font-size: clamp(28px, 9vw, 48px); font-weight: 200;
+  color: #ccc; user-select: none;
 }
-
-/* Text block under image */
-.grid-meta {
-  padding: 10px 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+.grid-meta { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 5px; }
 .grid-tag {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #888;
+  font-family: "Geist Mono", monospace; font-size: 8px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #aaa;
 }
-.grid-name {
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-  color: #000;
-}
-.grid-num {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.08em;
-  color: #bbb;
-  margin-top: 4px;
-}
+.grid-name { font-size: 14px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
+.grid-num { font-family: "Geist Mono", monospace; font-size: 8px; color: #ccc; margin-top: 2px; }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   LIST VIEW  (MSCHF-style)
-═══════════════════════════════════════════════════════════════════════════ */
-#listView {
-  list-style: none;
-  margin: 0; padding: 0;
-}
+/* List */
+#listView { list-style: none; }
 #listView.hidden { display: none; }
-
 .project-row {
-  border-bottom: 1px solid #e8e8e8;
-  display: grid;
-  grid-template-columns: 44px 1fr 20px;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 16px 0 0;
-  cursor: pointer;
+  border-bottom: 1px solid #ebebeb;
+  display: grid; grid-template-columns: 44px 1fr 18px;
+  align-items: center; min-height: 48px;
+  padding: 0 16px 0 0; cursor: pointer;
   transition: background 120ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 .project-row:active { background: #f8f8f8; }
 .row-num {
-  padding-left: 20px;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  color: #bbb;
-  white-space: nowrap;
+  padding-left: 20px; font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.06em; color: #ccc; white-space: nowrap;
 }
-.row-name {
-  font-size: 13px;
-  font-weight: 400;
-  padding: 14px 10px 14px 0;
-  line-height: 1.3;
-}
-.row-arrow {
-  font-family: "Geist Mono", monospace;
-  font-size: 11px;
-  color: #ccc;
-  text-align: right;
-}
+.row-name { font-size: 13px; padding: 14px 10px 14px 0; line-height: 1.3; }
+.row-arrow { font-family: "Geist Mono", monospace; font-size: 10px; color: #ddd; text-align: right; }
 
-/* ── Footer ──────────────────────────────────────────────────────────────────── */
 .arch-footer {
-  border-top: 1px solid #000;
-  padding: 20px 20px max(env(safe-area-inset-bottom), 20px);
-  display: flex; align-items: center; gap: 8px;
+  border-top: 1px solid #000; margin-top: auto;
+  padding: 20px 20px max(env(safe-area-inset-bottom,0px), 20px);
+  display: flex; align-items: center; flex-shrink: 0;
 }
 .arch-footer-copy {
   font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #bbb;
+  font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #ccc;
 }
-.arch-footer-yr {
-  margin-left: auto;
-  font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.2em; color: #bbb;
-}
+.arch-footer-yr { margin-left: auto; font-family: "Geist Mono", monospace; font-size: 8px; color: #ccc; }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   DETAIL OVERLAY
-═══════════════════════════════════════════════════════════════════════════ */
+/* ─── DETAIL overlay ──────────────────────────────────────────────────────── */
 #detail {
-  position: fixed; inset: 0;
-  z-index: 200;
+  position: fixed; inset: 0; z-index: 400;
   background: #fff;
   display: flex; flex-direction: column;
   transform: translateY(100%);
   transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
 }
 #detail.open { transform: translateY(0); }
-
 .detail-header {
-  height: 52px;
-  border-bottom: 1px solid #000;
-  display: flex; align-items: center;
-  padding: 0 20px; gap: 14px;
-  flex-shrink: 0;
+  height: 52px; border-bottom: 1px solid #000;
+  display: flex; align-items: center; padding: 0 20px; gap: 14px; flex-shrink: 0;
 }
 .detail-back {
-  font-family: "Geist Mono", monospace;
-  font-size: 11px; letter-spacing: 0.06em; color: #000; padding: 8px 0;
+  font-family: "Geist Mono", monospace; font-size: 11px; color: #000; padding: 8px 0;
 }
 .detail-back:active { opacity: 0.4; }
 .detail-header-num {
-  font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.14em; color: #bbb; margin-left: auto;
+  font-family: "Geist Mono", monospace; font-size: 9px; color: #bbb; margin-left: auto;
 }
 .detail-tile {
-  flex: 0 0 auto; width: 100%; aspect-ratio: 1 / 1;
+  flex: 0 0 auto; width: 100%; aspect-ratio: 1/1;
   border-bottom: 1px solid #000; background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
+  display: flex; align-items: center; justify-content: center; position: relative;
 }
 .detail-tile-q {
-  font-family: "Geist", sans-serif;
-  font-size: clamp(64px, 22vw, 120px);
-  font-weight: 300; color: #000;
-  letter-spacing: -0.04em; line-height: 1; user-select: none;
+  font-size: clamp(64px, 22vw, 120px); font-weight: 200;
+  color: #000; letter-spacing: -0.04em; line-height: 1; user-select: none;
 }
-.detail-tile::before, .detail-tile::after {
-  content: ""; position: absolute;
-  width: 10px; height: 10px;
-  border-color: #ccc; border-style: solid;
+.detail-tile::before,.detail-tile::after {
+  content: ""; position: absolute; width: 10px; height: 10px;
+  border-color: #ddd; border-style: solid;
 }
 .detail-tile::before { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
 .detail-tile::after  { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
-.detail-meta { padding: 24px 20px; flex: 1; }
-.detail-name {
-  font-size: 22px; font-weight: 500;
-  letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.1;
-}
+.detail-meta { padding: 24px 20px; flex: 1; overflow-y: auto; }
+.detail-name { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.1; }
 .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .detail-tag {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
-  border: 1px solid #ddd; padding: 4px 8px; color: #888; border-radius: 2px;
+  font-family: "Geist Mono", monospace; font-size: 8px; letter-spacing: 0.14em;
+  text-transform: uppercase; border: 1px solid #e0e0e0; padding: 4px 8px; color: #999; border-radius: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rainbow-pill, .arch-header-pill { animation-duration: 120s; }
-  #landing, #archive, #detail { transition-duration: 0ms; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 </style>
 </head>
 <body>
 
-<!-- ── LANDING ─────────────────────────────────────────────────────────────── -->
-<div id="landing">
-  <div class="rainbow-pill" id="rainbowBtn" role="button" aria-label="Enter archive" tabindex="0"></div>
-  <div class="landing-cue">
-    <div class="landing-cue-line"></div>
-    <span class="landing-cue-label">Tap</span>
-  </div>
-  <span class="landing-count">001 — 100</span>
+<!-- ══ LANDING ════════════════════════════════════════════════════════════ -->
+<div id="screenLanding" class="screen active">
+  <div class="rainbow-pill" aria-hidden="true"></div>
 </div>
 
-<!-- ── ARCHIVE ─────────────────────────────────────────────────────────────── -->
-<div id="archive">
-  <header class="arch-header">
-    <div class="arch-header-pill" aria-hidden="true"></div>
-    <span class="arch-header-title">Sovereign Archive</span>
+<!-- MENU button (always visible over landing) -->
+<button class="menu-btn" id="menuBtn" aria-label="Menu">
+  <div class="menu-btn-line"></div>
+  <span>Menu</span>
+</button>
 
-    <!-- View toggle -->
-    <div class="view-toggle">
-      <!-- Grid icon -->
-      <button class="vtbtn active" id="btnGrid" aria-label="Grid view">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/>
-          <rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>
-        </svg>
-      </button>
-      <!-- List icon -->
-      <button class="vtbtn" id="btnList" aria-label="List view">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <line x1="3" y1="6"  x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-      </button>
+<!-- ══ MENU OVERLAY ═══════════════════════════════════════════════════════ -->
+<div id="menuOverlay" role="dialog" aria-modal="true" aria-label="Navigation">
+  <button class="menu-close" id="menuClose">Close</button>
+  <nav class="menu-items">
+    <div class="menu-item" data-target="about" tabindex="0">
+      <span class="menu-item-num">01</span>About
     </div>
+    <div class="menu-item" data-target="archive" tabindex="0">
+      <span class="menu-item-num">02</span>Project
+    </div>
+    <div class="menu-item" data-target="other" tabindex="0">
+      <span class="menu-item-num">03</span>Other
+    </div>
+  </nav>
+  <p class="menu-footer">Sovereign Archive · MMXXVI</p>
+</div>
 
-    <!-- Back to landing -->
-    <button class="arch-header-back" id="archBack" aria-label="Back to landing">
+<!-- ══ ABOUT ══════════════════════════════════════════════════════════════ -->
+<div id="screenAbout" class="screen">
+  <header class="about-header">
+    <div class="about-header-pill" aria-hidden="true"></div>
+    <span class="about-header-title">About</span>
+    <button class="about-header-back" id="aboutBack" aria-label="Back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
   </header>
 
-  <!-- Grid view -->
-  <div id="gridView"></div>
+  <div class="lang-intro">
+    <p class="lang-intro-label">Language · 言語</p>
+    <p class="lang-intro-text">Select your<br>language.</p>
+  </div>
 
-  <!-- List view -->
+  <div class="lang-grid" id="langGrid">
+    <!-- filled by JS -->
+  </div>
+
+  <footer class="about-footer">
+    <span class="about-footer-copy">© MMXXVI · Sovereign Archive</span>
+  </footer>
+</div>
+
+<!-- ══ ARCHIVE ════════════════════════════════════════════════════════════ -->
+<div id="screenArchive" class="screen">
+  <header class="arch-header">
+    <div class="arch-header-pill" aria-hidden="true"></div>
+    <span class="arch-header-title">Project</span>
+    <div class="view-toggle">
+      <button class="vtbtn active" id="btnGrid" aria-label="Grid view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/>
+          <rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>
+        </svg>
+      </button>
+      <button class="vtbtn" id="btnList" aria-label="List view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <button class="arch-header-back" id="archBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+  </header>
+
+  <div id="gridView"></div>
   <ul id="listView" class="hidden"></ul>
 
   <footer class="arch-footer">
@@ -460,7 +594,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   </footer>
 </div>
 
-<!-- ── DETAIL ──────────────────────────────────────────────────────────────── -->
+<!-- ══ DETAIL ════════════════════════════════════════════════════════════ -->
 <div id="detail">
   <div class="detail-header">
     <button class="detail-back" id="detailBack">← Back</button>
@@ -476,110 +610,159 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 </div>
 
 <script>
-/* ── Data ──────────────────────────────────────────────────────────────────── */
+/* ─── Screen manager ──────────────────────────────────────────────────────── */
+const screens = {
+  landing: document.getElementById("screenLanding"),
+  about:   document.getElementById("screenAbout"),
+  archive: document.getElementById("screenArchive"),
+};
+const menuBtn     = document.getElementById("menuBtn");
+const menuOverlay = document.getElementById("menuOverlay");
+const menuClose   = document.getElementById("menuClose");
+
+let currentScreen = "landing";
+
+function showScreen(name) {
+  // deactivate all
+  Object.values(screens).forEach(s => s.classList.remove("active"));
+  // show menu btn only on landing
+  menuBtn.style.display = (name === "landing") ? "" : "none";
+  // activate target
+  if (screens[name]) {
+    screens[name].classList.add("active");
+    // reset scroll
+    screens[name].scrollTop = 0;
+    currentScreen = name;
+  }
+  closeMenu();
+}
+
+/* ─── Menu ────────────────────────────────────────────────────────────────── */
+function openMenu() {
+  menuOverlay.classList.add("open");
+  menuBtn.style.display = "none";
+}
+function closeMenu() {
+  menuOverlay.classList.remove("open");
+  if (currentScreen === "landing") menuBtn.style.display = "";
+}
+
+menuBtn.addEventListener("click", openMenu);
+menuClose.addEventListener("click", closeMenu);
+
+menuOverlay.querySelectorAll(".menu-item").forEach(item => {
+  item.addEventListener("click", () => {
+    const t = item.dataset.target;
+    if (t === "other") { closeMenu(); return; } // placeholder
+    showScreen(t);
+  });
+});
+
+// Back buttons
+document.getElementById("aboutBack").addEventListener("click", () => showScreen("landing"));
+document.getElementById("archBack").addEventListener("click",  () => showScreen("landing"));
+
+/* ─── Language data ───────────────────────────────────────────────────────── */
+const LANGUAGES = [
+  { native: "English",    roman: "English",    region: "Global" },
+  { native: "日本語",     roman: "Japanese",   region: "Japan" },
+  { native: "中文",       roman: "Chinese",    region: "China · Taiwan" },
+  { native: "한국어",     roman: "Korean",     region: "Korea" },
+  { native: "Español",    roman: "Spanish",    region: "LatAm · Spain" },
+  { native: "Português",  roman: "Portuguese", region: "Brazil · Portugal" },
+  { native: "Français",   roman: "French",     region: "France · Africa" },
+  { native: "Deutsch",    roman: "German",     region: "Germany · Austria" },
+  { native: "Italiano",   roman: "Italian",    region: "Italy" },
+  { native: "العربية",    roman: "Arabic",     region: "Middle East" },
+  { native: "हिन्दी",    roman: "Hindi",      region: "India" },
+  { native: "Русский",    roman: "Russian",    region: "Russia" },
+  { native: "Türkçe",     roman: "Turkish",    region: "Turkey" },
+  { native: "Polski",     roman: "Polish",     region: "Poland" },
+  { native: "Nederlands", roman: "Dutch",      region: "Netherlands" },
+  { native: "Svenska",    roman: "Swedish",    region: "Scandinavia" },
+];
+
+const langGrid = document.getElementById("langGrid");
+LANGUAGES.forEach(lang => {
+  const btn = document.createElement("div");
+  btn.className = "lang-btn";
+  btn.setAttribute("role", "button");
+  btn.setAttribute("tabindex", "0");
+  btn.innerHTML = `
+    <span class="lang-native">${lang.native}</span>
+    <span class="lang-roman">${lang.roman}</span>
+    <span class="lang-region">${lang.region}</span>
+  `;
+  // press ripple
+  btn.addEventListener("pointerdown", e => {
+    const r = btn.getBoundingClientRect();
+    btn.style.setProperty("--rx", ((e.clientX - r.left) / r.width * 100) + "%");
+    btn.style.setProperty("--ry", ((e.clientY - r.top) / r.height * 100) + "%");
+    btn.classList.add("pressed");
+    setTimeout(() => btn.classList.remove("pressed"), 500);
+  });
+  langGrid.appendChild(btn);
+});
+
+/* ─── Project data ────────────────────────────────────────────────────────── */
 const TOTAL = 100;
 const pad3  = n => String(n).padStart(3, "0");
-
 const TAG_POOL = [
   "Ongoing","Archive","Research","Object","System","Field",
   "Index","Surface","Form","Light","Time","Space",
   "Signal","Territory","Currency","Sovereign","Material","Network","Protocol","Fragment"
 ];
-
 function deterministicTags(seed, count = 3) {
   let h = (seed * 2654435761) >>> 0;
   const pool = [...TAG_POOL], out = [];
   for (let i = 0; i < count; i++) {
     h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
-    const idx = h % pool.length;
-    out.push(pool.splice(idx, 1)[0]);
+    out.push(pool.splice(h % pool.length, 1)[0]);
   }
   return out;
 }
-
 const projects = Array.from({ length: TOTAL }, (_, i) => ({
-  n:    i + 1,
-  name: `Project ${pad3(i + 1)}`,
-  tags: deterministicTags(i + 1, 3),
+  n: i + 1, name: `Project ${pad3(i+1)}`, tags: deterministicTags(i+1, 3),
 }));
 
-/* ── Build grid ────────────────────────────────────────────────────────────── */
+/* ─── Build archive ───────────────────────────────────────────────────────── */
 const gridView = document.getElementById("gridView");
 const listView = document.getElementById("listView");
 
 projects.forEach(p => {
-  // Grid cell
   const cell = document.createElement("div");
-  cell.className = "grid-cell";
-  cell.dataset.idx = p.n - 1;
+  cell.className = "grid-cell"; cell.dataset.idx = p.n - 1;
   cell.innerHTML = `
     <div class="grid-img"><span class="grid-img-q">?</span></div>
     <div class="grid-meta">
       <span class="grid-tag">${p.tags[0]}</span>
       <span class="grid-name">${p.name}</span>
       <span class="grid-num">#${pad3(p.n)}</span>
-    </div>
-  `;
+    </div>`;
   gridView.appendChild(cell);
 
-  // List row
   const li = document.createElement("li");
-  li.className = "project-row";
-  li.dataset.idx = p.n - 1;
+  li.className = "project-row"; li.dataset.idx = p.n - 1;
   li.innerHTML = `
     <span class="row-num">#${pad3(p.n)}</span>
     <span class="row-name">${p.name}</span>
-    <span class="row-arrow">›</span>
-  `;
+    <span class="row-arrow">›</span>`;
   listView.appendChild(li);
 });
 
-/* ── View toggle ───────────────────────────────────────────────────────────── */
-const btnGrid = document.getElementById("btnGrid");
-const btnList = document.getElementById("btnList");
-
-btnGrid.addEventListener("click", () => {
-  gridView.classList.remove("hidden");
-  listView.classList.add("hidden");
-  btnGrid.classList.add("active");
-  btnList.classList.remove("active");
+/* ─── View toggle ─────────────────────────────────────────────────────────── */
+document.getElementById("btnGrid").addEventListener("click", () => {
+  gridView.classList.remove("hidden"); listView.classList.add("hidden");
+  document.getElementById("btnGrid").classList.add("active");
+  document.getElementById("btnList").classList.remove("active");
 });
-btnList.addEventListener("click", () => {
-  listView.classList.remove("hidden");
-  gridView.classList.add("hidden");
-  btnList.classList.add("active");
-  btnGrid.classList.remove("active");
+document.getElementById("btnList").addEventListener("click", () => {
+  listView.classList.remove("hidden"); gridView.classList.add("hidden");
+  document.getElementById("btnList").classList.add("active");
+  document.getElementById("btnGrid").classList.remove("active");
 });
 
-/* ── Landing ↔ Archive ─────────────────────────────────────────────────────── */
-const landing    = document.getElementById("landing");
-const archive    = document.getElementById("archive");
-const rainbowBtn = document.getElementById("rainbowBtn");
-const archBack   = document.getElementById("archBack");
-
-function enterArchive() {
-  landing.classList.add("dismissed");
-  archive.classList.add("visible");
-  // keep body scroll locked only for landing; archive can scroll freely
-  document.body.style.overflow = "";
-}
-
-function backToLanding() {
-  landing.classList.remove("dismissed");
-  archive.classList.remove("visible");
-  document.body.style.overflow = "hidden";
-}
-
-// Lock scroll on landing (fixed layout, no scroll needed)
-document.body.style.overflow = "hidden";
-
-rainbowBtn.addEventListener("click", enterArchive);
-rainbowBtn.addEventListener("keydown", e => {
-  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enterArchive(); }
-});
-archBack.addEventListener("click", backToLanding);
-
-/* ── Detail ────────────────────────────────────────────────────────────────── */
+/* ─── Detail ──────────────────────────────────────────────────────────────── */
 const detail     = document.getElementById("detail");
 const detailBack = document.getElementById("detailBack");
 const detailNum  = document.getElementById("detailNum");
@@ -591,48 +774,32 @@ function openDetail(p) {
   detailName.textContent = p.name;
   detailTags.innerHTML   = p.tags.map(t => `<span class="detail-tag">${t}</span>`).join("");
   detail.classList.add("open");
-  document.body.style.overflow = "hidden";
 }
-
 function closeDetail() {
   detail.classList.remove("open");
-  document.body.style.overflow = "";
 }
 
-// Tap on grid cell
-let tGridMoved = false;
-gridView.addEventListener("touchstart", () => { tGridMoved = false; }, { passive: true });
-gridView.addEventListener("touchmove",  () => { tGridMoved = true;  }, { passive: true });
-gridView.addEventListener("click", e => {
-  if (tGridMoved) return;
-  const cell = e.target.closest(".grid-cell");
-  if (!cell) return;
-  openDetail(projects[+cell.dataset.idx]);
-});
-
-// Tap on list row
-let tListMoved = false;
-listView.addEventListener("touchstart", () => { tListMoved = false; }, { passive: true });
-listView.addEventListener("touchmove",  () => { tListMoved = true;  }, { passive: true });
-listView.addEventListener("click", e => {
-  if (tListMoved) return;
-  const row = e.target.closest(".project-row");
-  if (!row) return;
-  openDetail(projects[+row.dataset.idx]);
-});
+let tMoved = false;
+function tapSetup(el, onTap) {
+  el.addEventListener("touchstart", () => { tMoved = false; }, { passive: true });
+  el.addEventListener("touchmove",  () => { tMoved = true;  }, { passive: true });
+  el.addEventListener("click", e => {
+    if (tMoved) return;
+    const cell = e.target.closest("[data-idx]");
+    if (!cell) return;
+    onTap(projects[+cell.dataset.idx]);
+  });
+}
+tapSetup(gridView, openDetail);
+tapSetup(listView, openDetail);
 
 detailBack.addEventListener("click", closeDetail);
-
-// Swipe down to close detail
 let swipeY = 0;
 detail.addEventListener("touchstart", e => { swipeY = e.touches[0].clientY; }, { passive: true });
 detail.addEventListener("touchend",   e => {
   if (e.changedTouches[0].clientY - swipeY > 60) closeDetail();
 }, { passive: true });
-
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") closeDetail();
-});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
 </script>
 </body>
 </html>
