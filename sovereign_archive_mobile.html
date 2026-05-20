@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="only light"/>
+<meta name="theme-color" content="#ffffff"/>
+<title>SOVEREIGN ARCHIVE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  background: #fff; color: #000;
+  font-family: "Geist", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+/* ─── SCREENS ────────────────────────────────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  background: #fff;
+  opacity: 0; pointer-events: none;
+  transition: opacity 400ms cubic-bezier(0.4,0,0.2,1),
+              transform 400ms cubic-bezier(0.4,0,0.2,1);
+}
+.screen.active { opacity: 1; pointer-events: auto; }
+
+#screenArchive {
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(16px);
+  display: flex; flex-direction: column; min-height: 100%;
+}
+#screenArchive.active { transform: translateY(0); }
+
+#screenAbout {
+  overflow: hidden;
+  transform: translateY(16px);
+  display: flex; flex-direction: column;
+  height: 100%;
+}
+#screenAbout.active { transform: translateY(0); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING
+═══════════════════════════════════════════════════════════════════════════ */
+#screenLanding {
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Rainbow pill */
+.rainbow-pill {
+  --w: clamp(78px,19vw,112px);
+  --h: clamp(230px,50vh,370px);
+  --r: clamp(38px,9vw,56px);
+  --stroke: 1.8px;
+  width: var(--w); height: var(--h);
+  border-radius: var(--r); position: relative;
+  pointer-events: none;
+  animation: pill-breathe 4s ease-in-out infinite;
+}
+.rainbow-pill::before {
+  content: ""; position: absolute; inset: 0;
+  border-radius: var(--r);
+  background: linear-gradient(to bottom,
+    #d8d8dc 0%,#ffb7c8 9%,#ffd99a 18%,#fff5a2 27%,
+    #b6ffc3 37%,#a5e4ff 48%,#b0b8ff 58%,#e0a8ff 68%,
+    #ff9eb8 77%,#ffd28a 86%,#c6ffae 94%,#d8d8dc 100%);
+  background-size: 100% 600%;
+  animation: flow 22s linear infinite;
+  filter: saturate(1.5) brightness(1.04);
+}
+.rainbow-pill::after {
+  content: ""; position: absolute;
+  inset: var(--stroke);
+  border-radius: calc(var(--r) - var(--stroke));
+  background: #fff;
+}
+@keyframes flow { to { background-position: 0% 600%; } }
+@keyframes pill-breathe { 0%,100%{opacity:1} 50%{opacity:.82} }
+
+/* ─── FAB — soft grey pill, reference quality ───────────────────────────────
+   No border. Light grey fill (#f0f0f0). Dark-grey mark (not pure black).
+   Matches the "Follow / Connect / More" button aesthetic from reference.
+   Open state deepens the fill slightly.                                     */
+.fab {
+  position: fixed;
+  bottom: max(env(safe-area-inset-bottom,0px), 56px);
+  left: 50%; transform: translateX(-50%);
+  z-index: 200;
+  width: 56px; height: 32px;
+  border-radius: 9999px;
+  border: none;
+  background: #f0f0f0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 220ms ease;
+}
+.fab.open { background: #e0e0e0; }
+
+/* + mark: two bars crossing at centre */
+.fab-cross {
+  position: relative; z-index: 1;
+  width: 14px; height: 14px;
+  transition: transform 340ms cubic-bezier(0.22,1,0.36,1);
+}
+.fab-cross::before,
+.fab-cross::after {
+  content: "";
+  position: absolute;
+  background: #222;
+  border-radius: 1px;
+  transition: transform 340ms cubic-bezier(0.22,1,0.36,1),
+              width 340ms cubic-bezier(0.22,1,0.36,1),
+              height 340ms cubic-bezier(0.22,1,0.36,1),
+              top 340ms cubic-bezier(0.22,1,0.36,1),
+              left 340ms cubic-bezier(0.22,1,0.36,1);
+}
+/* + state: horizontal bar */
+.fab-cross::before {
+  width: 14px; height: 1.8px;
+  top: 50%; left: 0;
+  transform: translateY(-50%);
+}
+/* + state: vertical bar */
+.fab-cross::after {
+  width: 1.8px; height: 14px;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+}
+/* × state: diagonal bars, wider to feel like a proper X */
+.fab.open .fab-cross::before {
+  width: 16px; height: 1.8px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.fab.open .fab-cross::after {
+  width: 16px; height: 1.8px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* ─── Pop-up menu — same grey pill quality ───────────────────────────────── */
+.fab-menu {
+  position: fixed;
+  bottom: max(env(safe-area-inset-bottom,0px), 100px);
+  left: 50%; transform: translateX(-50%) translateY(8px) scale(0.96);
+  transform-origin: bottom center;
+  z-index: 199;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: none;
+  background: #f0f0f0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 260ms ease, transform 300ms cubic-bezier(0.22,1,0.36,1);
+}
+.fab-menu.open {
+  opacity: 1; pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.fab-menu-inner {
+  display: flex;
+}
+.fab-menu-item {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+  padding: 11px 22px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 130ms ease;
+  /* subtle divider between items, same grey family */
+  border-right: 1px solid rgba(0,0,0,0.08);
+  color: #222;
+}
+.fab-menu-item:last-child { border-right: none; }
+.fab-menu-item:active { background: #e0e0e0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ABOUT — pure typographic composition, no scroll
+   Back button top-right. Words tight together, black dot between each.
+═══════════════════════════════════════════════════════════════════════════ */
+.about-back {
+  position: absolute;
+  top: 0; right: 0;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10;
+  color: #000;
+  -webkit-tap-highlight-color: transparent;
+}
+.about-back svg { width: 20px; height: 20px; display: block; }
+.about-back:active { opacity: 0.35; }
+
+.lang-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Each row: word + dot, left-aligned, indented to sit closer to visual centre */
+.lang-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 0 0 14vw;          /* left indent pushes block toward visual centre */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  transition: opacity 180ms ease;
+}
+
+/* Tap affordance: thin underline that appears on press */
+.lang-item:active .lang-word {
+  opacity: 0.45;
+}
+.lang-item:active .lang-word::after {
+  transform: scaleX(1);
+}
+
+.lang-word {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #000;
+  position: relative;
+  display: inline-block;
+  transition: opacity 180ms ease;
+}
+/* Underline affordance — starts hidden, scales in on press */
+.lang-word::after {
+  content: "";
+  position: absolute;
+  bottom: -3px; left: 0; right: 0;
+  height: 1px;
+  background: #000;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 200ms cubic-bezier(0.22,1,0.36,1);
+}
+
+/* Black dot separator between words */
+.lang-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #000;
+  margin: 9px 0;
+  flex-shrink: 0;
+}
+/* last item has no dot — handled in JS */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARCHIVE
+═══════════════════════════════════════════════════════════════════════════ */
+.arch-header {
+  position: sticky; top: 0; z-index: 50;
+  height: 44px;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #000;
+  display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  flex-shrink: 0;
+}
+.arch-header-pill {
+  width: 4px; height: 18px; border-radius: 9999px; flex-shrink: 0;
+  background: linear-gradient(to bottom,
+    #ffb7c8,#ffd99a,#b6ffc3,#a5e4ff,#b0b8ff,#e0a8ff,#ffb7c8);
+  background-size: 100% 600%;
+  animation: flow 22s linear infinite; filter: saturate(1.4);
+}
+.arch-header-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+}
+.view-toggle { margin-left: auto; display: flex; gap: 2px; }
+.vtbtn {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; color: #ccc; transition: color 150ms;
+}
+.vtbtn.active { color: #000; }
+.vtbtn svg { width: 15px; height: 15px; display: block; }
+.arch-header-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; color: #000; margin-left: 4px;
+}
+.arch-header-back svg { width: 18px; height: 18px; display: block; }
+.arch-header-back:active { opacity: 0.4; }
+
+/* Grid */
+#gridView {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-left: 1px solid #e8e8e8;
+  border-top: 1px solid #e8e8e8;
+}
+#gridView.hidden { display: none; }
+.grid-cell {
+  border-right: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+  background: #fafafa;
+  display: flex; flex-direction: column;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease;
+  position: relative; overflow: hidden;
+}
+.grid-cell:active { background: #f0f0f0; }
+.grid-media {
+  width: 100%; aspect-ratio: 1/1;
+  border-bottom: 1px solid #e8e8e8;
+  background: #f4f4f4;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.grid-media img, .grid-media video, .grid-media canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.grid-media-placeholder {
+  font-size: clamp(24px,7vw,40px); font-weight: 200;
+  color: #d0d0d0; user-select: none; position: relative; z-index: 1;
+}
+.grid-meta { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 5px; }
+.grid-tag { font-family: "Geist Mono", monospace; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #aaa; }
+.grid-name { font-size: 13px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; }
+.grid-num { font-family: "Geist Mono", monospace; font-size: 8px; color: #ccc; margin-top: 2px; }
+
+/* List */
+#listView { list-style: none; }
+#listView.hidden { display: none; }
+.project-row {
+  border-bottom: 1px solid #ebebeb;
+  display: grid; grid-template-columns: 44px 1fr 18px;
+  align-items: center; min-height: 48px; padding: 0 16px 0 0;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 120ms;
+}
+.project-row:active { background: #f8f8f8; }
+.row-num { padding-left: 20px; font-family: "Geist Mono", monospace; font-size: 9px; letter-spacing: 0.06em; color: #ccc; white-space: nowrap; }
+.row-name { font-size: 13px; padding: 14px 10px 14px 0; line-height: 1.3; }
+.row-arrow { font-family: "Geist Mono", monospace; font-size: 10px; color: #ddd; text-align: right; }
+
+.arch-footer {
+  border-top: 1px solid #000; margin-top: auto;
+  padding: 20px 20px max(env(safe-area-inset-bottom,0px),20px);
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.arch-footer-copy { font-family: "Geist Mono", monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #ccc; }
+.arch-footer-yr { margin-left: auto; font-family: "Geist Mono", monospace; font-size: 8px; color: #ccc; }
+
+/* ─── DETAIL ─────────────────────────────────────────────────────────────── */
+#detail {
+  position: fixed; inset: 0; z-index: 400;
+  background: #fff; display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 480ms cubic-bezier(0.22,1,0.36,1);
+  overflow: hidden;
+}
+#detail.open { transform: translateY(0); }
+.detail-header {
+  height: 52px; border-bottom: 1px solid #000;
+  display: flex; align-items: center; padding: 0 20px; gap: 14px; flex-shrink: 0;
+}
+.detail-back { font-family: "Geist Mono", monospace; font-size: 11px; color: #000; padding: 8px 0; }
+.detail-back:active { opacity: 0.4; }
+.detail-header-num { font-family: "Geist Mono", monospace; font-size: 9px; color: #bbb; margin-left: auto; }
+.detail-tile {
+  flex: 0 0 auto; width: 100%; aspect-ratio: 1/1;
+  border-bottom: 1px solid #000; background: #fafafa;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.detail-tile img, .detail-tile video, .detail-tile canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.detail-tile-q { font-size: clamp(64px,22vw,120px); font-weight: 200; color: #000; letter-spacing: -0.04em; line-height: 1; user-select: none; }
+.detail-tile::before,.detail-tile::after { content:""; position:absolute; width:10px; height:10px; border-color:#ddd; border-style:solid; }
+.detail-tile::before { top:12px; left:12px; border-width:1px 0 0 1px; }
+.detail-tile::after  { bottom:12px; right:12px; border-width:0 1px 1px 0; }
+.detail-meta { padding: 24px 20px; flex:1; overflow-y:auto; }
+.detail-name { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.1; }
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.detail-tag { font-family:"Geist Mono",monospace; font-size:8px; letter-spacing:0.14em; text-transform:uppercase; border:1px solid #e0e0e0; padding:4px 8px; color:#999; border-radius:2px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTE — bulletin board / channel
+═══════════════════════════════════════════════════════════════════════════ */
+#screenNote {
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(16px);
+  display: flex; flex-direction: column;
+}
+#screenNote.active { transform: translateY(0); }
+
+.note-header {
+  position: sticky; top: 0; z-index: 50;
+  height: 44px; flex-shrink: 0;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #000;
+  display: flex; align-items: center; padding: 0 16px; gap: 10px;
+}
+.note-header-pill {
+  width: 4px; height: 18px; border-radius: 9999px; flex-shrink: 0;
+  background: linear-gradient(to bottom,
+    #ffb7c8,#ffd99a,#b6ffc3,#a5e4ff,#b0b8ff,#e0a8ff,#ffb7c8);
+  background-size: 100% 600%;
+  animation: flow 22s linear infinite; filter: saturate(1.4);
+}
+.note-header-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+}
+.note-header-back {
+  margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; color: #000;
+}
+.note-header-back svg { width: 18px; height: 18px; display: block; }
+.note-header-back:active { opacity: 0.4; }
+
+/* Feed */
+.note-feed {
+  flex: 1;
+  padding: 16px 16px 120px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.note-empty {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #ccc; padding: 32px 0;
+}
+
+/* Post bubble */
+.note-post {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border-radius: 4px;
+  border: 1px solid #efefef;
+  animation: postIn 280ms cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes postIn {
+  from { opacity:0; transform: translateY(6px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.note-post-text {
+  font-size: 14px; font-weight: 300; line-height: 1.55; color: #111;
+  white-space: pre-wrap; word-break: break-word;
+}
+.note-post-media {
+  width: 100%; border-radius: 3px; overflow: hidden;
+  background: #f0f0f0; position: relative;
+}
+.note-post-media img {
+  width: 100%; display: block; border-radius: 3px;
+}
+.note-post-media video {
+  width: 100%; display: block; border-radius: 3px; background: #000;
+}
+.note-post-audio {
+  width: 100%; padding: 10px 0 4px;
+}
+.note-post-audio audio {
+  width: 100%; height: 36px;
+}
+/* 3D canvas preview */
+.note-post-3d {
+  width: 100%; aspect-ratio: 16/9; border-radius: 3px; overflow: hidden;
+  background: #111;
+}
+.note-post-3d canvas { width: 100%; height: 100%; display: block; }
+
+.note-post-meta {
+  display: flex; align-items: center; gap: 8px;
+}
+.note-post-time {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.08em; color: #bbb;
+}
+.note-post-type {
+  font-family: "Geist Mono", monospace;
+  font-size: 7px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #ccc; border: 1px solid #e8e8e8; padding: 2px 6px; border-radius: 2px;
+}
+.note-post-delete {
+  margin-left: auto;
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; color: #ddd; cursor: pointer; padding: 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 130ms;
+}
+.note-post-delete:active { color: #000; }
+
+/* Composer — fixed at bottom */
+.note-composer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid #e8e8e8;
+  padding: 10px 12px max(env(safe-area-inset-bottom,0px),10px);
+  display: none; flex-direction: column; gap: 8px;
+}
+.note-composer.visible { display: flex; }
+
+/* Attachment preview strip */
+.note-attach-preview {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.note-attach-thumb {
+  width: 56px; height: 56px; border-radius: 4px;
+  background: #f0f0f0; border: 1px solid #e0e0e0;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.note-attach-thumb img,
+.note-attach-thumb video { width:100%; height:100%; object-fit:cover; display:block; }
+.note-attach-thumb-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #888; text-align: center; padding: 4px;
+  line-height: 1.3;
+}
+.note-attach-remove {
+  position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); color: #fff;
+  font-size: 9px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; line-height: 1;
+}
+
+/* Input row */
+.note-input-row {
+  display: flex; align-items: flex-end; gap: 8px;
+}
+.note-textarea {
+  flex: 1;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 14px; font-weight: 300; line-height: 1.5;
+  color: #111; background: #f4f4f4;
+  border: none; border-radius: 20px;
+  padding: 9px 14px; resize: none;
+  min-height: 38px; max-height: 120px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.note-textarea::placeholder { color: #bbb; }
+
+/* Attach button */
+.note-attach-btn {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: #f0f0f0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 120ms;
+}
+.note-attach-btn:active { background: #e0e0e0; }
+.note-attach-btn svg { width: 16px; height: 16px; display: block; color: #555; }
+
+/* Send button */
+.note-send-btn {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: #000; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 120ms, opacity 120ms;
+  opacity: 0.3;
+}
+.note-send-btn.ready { opacity: 1; }
+.note-send-btn:active { background: #333; }
+.note-send-btn svg { width: 14px; height: 14px; display: block; color: #fff; }
+
+/* Hidden file input */
+#noteFileInput { display: none; }
+
+/* ─── Note login button (header) ─────────────────────────────────────────── */
+.note-login-btn {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #999; padding: 5px 8px;
+  border: 1px solid #e0e0e0; border-radius: 3px;
+  margin-left: auto; margin-right: 8px;
+  transition: color 130ms, border-color 130ms;
+}
+.note-login-btn:active { color: #000; border-color: #999; }
+
+/* ─── Login prompt (non-admin) ───────────────────────────────────────────── */
+.note-login-prompt {
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px 20px;
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #ccc;
+}
+
+/* ─── Login modal ────────────────────────────────────────────────────────── */
+.login-modal {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.login-modal-inner {
+  background: #fff; border-radius: 8px;
+  padding: 28px 24px 20px;
+  width: min(320px, 88vw);
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.login-modal-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: #999; margin-bottom: 4px;
+}
+.login-input {
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 15px; font-weight: 300;
+  border: none; border-bottom: 1px solid #e0e0e0;
+  padding: 8px 0; outline: none; width: 100%;
+  -webkit-appearance: none;
+  transition: border-color 150ms;
+}
+.login-input:focus { border-color: #000; }
+.login-error {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.08em; color: #e00;
+  min-height: 12px;
+}
+.login-submit {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px; font-weight: 500;
+  background: #000; color: #fff;
+  border-radius: 9999px; padding: 11px;
+  text-align: center; margin-top: 4px;
+  transition: background 130ms;
+}
+.login-submit:active { background: #333; }
+.login-cancel {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #bbb; text-align: center; padding: 6px;
+  transition: color 130ms;
+}
+.login-cancel:active { color: #000; }
+
+@media (prefers-reduced-motion:reduce) {
+  * { animation-duration:.01ms!important; transition-duration:.01ms!important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LANDING ══════════════════════════════════════════════════════════════ -->
+<div id="screenLanding" class="screen active">
+  <div class="rainbow-pill" aria-hidden="true"></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" aria-label="Open menu" aria-expanded="false">
+  <span class="fab-cross"></span>
+</button>
+
+<!-- Pop-up menu -->
+<div class="fab-menu" id="fabMenu" role="menu">
+  <div class="fab-menu-inner">
+    <div class="fab-menu-item" data-target="about"   role="menuitem" tabindex="-1">About</div>
+    <div class="fab-menu-item" data-target="archive" role="menuitem" tabindex="-1">Project</div>
+    <div class="fab-menu-item" data-target="note"    role="menuitem" tabindex="-1">Note</div>
+  </div>
+</div>
+
+<!-- ══ ABOUT — pure typographic screen ══════════════════════════════════════ -->
+<div id="screenAbout" class="screen">
+  <button class="about-back" id="aboutBack" aria-label="Back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </button>
+  <div class="lang-stack" id="langStack"></div>
+</div>
+
+<!-- ══ ARCHIVE ══════════════════════════════════════════════════════════════ -->
+<div id="screenArchive" class="screen">
+  <header class="arch-header">
+    <div class="arch-header-pill" aria-hidden="true"></div>
+    <span class="arch-header-title">Project</span>
+    <div class="view-toggle">
+      <button class="vtbtn active" id="btnGrid" aria-label="Grid view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/>
+          <rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>
+        </svg>
+      </button>
+      <button class="vtbtn" id="btnList" aria-label="List view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <button class="arch-header-back" id="archBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+  </header>
+  <div id="gridView"></div>
+  <ul id="listView" class="hidden"></ul>
+  <footer class="arch-footer">
+    <span class="arch-footer-copy">© MMXXVI</span>
+    <span class="arch-footer-yr">001 — 100</span>
+  </footer>
+</div>
+
+<!-- ══ NOTE ══════════════════════════════════════════════════════════════════ -->
+<div id="screenNote" class="screen">
+  <header class="note-header">
+    <div class="note-header-pill" aria-hidden="true"></div>
+    <span class="note-header-title">Note</span>
+    <button class="note-login-btn" id="loginBtn" style="display:none"></button>
+    <button class="note-header-back" id="noteBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+  </header>
+  <div class="note-feed" id="noteFeed">
+    <span class="note-empty" id="noteEmpty">No posts yet</span>
+  </div>
+  <!-- Login prompt shown to non-admin visitors -->
+  <div class="note-login-prompt" id="loginPrompt" style="display:none">
+    <p>Admin access required to post.</p>
+  </div>
+</div>
+
+<!-- Login modal -->
+<div class="login-modal" id="loginModal" style="display:none">
+  <div class="login-modal-inner">
+    <div class="login-modal-title">Sign in</div>
+    <input class="login-input" id="loginEmail" type="email" placeholder="Email" autocomplete="email"/>
+    <input class="login-input" id="loginPassword" type="password" placeholder="Password" autocomplete="current-password"/>
+    <div class="login-error" id="loginError"></div>
+    <button class="login-submit" id="loginSubmit">Sign in</button>
+    <button class="login-cancel" id="loginCancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Note composer (shown only when Note screen is active) -->
+<div class="note-composer" id="noteComposer">
+  <div class="note-attach-preview" id="noteAttachPreview"></div>
+  <div class="note-input-row">
+    <button class="note-attach-btn" id="noteAttachBtn" aria-label="Attach file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66L9.41 17.41a2 2 0 01-2.83-2.83l8.49-8.48"/>
+      </svg>
+    </button>
+    <textarea class="note-textarea" id="noteTextarea" placeholder="Write something…" rows="1"></textarea>
+    <button class="note-send-btn" id="noteSendBtn" aria-label="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+      </svg>
+    </button>
+  </div>
+  <input type="file" id="noteFileInput" accept="image/*,video/*,audio/*,.glb,.gltf" multiple>
+</div>
+
+<!-- ══ DETAIL ═══════════════════════════════════════════════════════════════ -->
+<div id="detail">
+  <div class="detail-header">
+    <button class="detail-back" id="detailBack">← Back</button>
+    <span class="detail-header-num" id="detailNum">#001</span>
+  </div>
+  <div class="detail-tile" id="detailTile">
+    <span class="detail-tile-q" id="detailQ">?</span>
+  </div>
+  <div class="detail-meta">
+    <div class="detail-name" id="detailName">Project</div>
+    <div class="detail-tags" id="detailTags"></div>
+  </div>
+</div>
+
+<!-- Firebase compat SDK (loads global `firebase` object) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   FIREBASE — loaded via compat CDN scripts in <head>, globals available
+   SDK tags added just before this script block
+═══════════════════════════════════════════════════════════════════════════ */
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBt8YrBaUZYdHVh_L7xli0HKm7EfX6n_BI",
+  authDomain:        "projectp-fc779.firebaseapp.com",
+  projectId:         "projectp-fc779",
+  storageBucket:     "projectp-fc779.firebasestorage.app",
+  messagingSenderId: "554116936611",
+  appId:             "1:554116936611:web:86bf455fbd763a149de016",
+  measurementId:     "G-540T82E3HC"
+};
+
+const ADMIN_EMAIL = "paulody1021@gmail.com";
+
+const app     = firebase.initializeApp(firebaseConfig);
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+
+/* ─── Auth state (registered after all vars/fns are defined, see bottom) ──── */
+let currentUser = null;
+
+function updateComposerVisibility() {
+  const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+  const onNote  = currentScreen === "note";
+  noteComposer.classList.toggle("visible", onNote && isAdmin);
+  loginPrompt.style.display = (onNote && !isAdmin) ? "flex" : "none";
+}
+
+function updateLoginUI(isAdmin) {
+  loginBtn.textContent   = isAdmin ? "Sign out" : "Sign in";
+  loginBtn.style.display = "";
+}
+
+/* ─── Screen router ──────────────────────────────────────────────────────── */
+const screens = {
+  landing: document.getElementById("screenLanding"),
+  about:   document.getElementById("screenAbout"),
+  archive: document.getElementById("screenArchive"),
+  note:    document.getElementById("screenNote"),
+};
+let currentScreen = "landing";
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove("active"));
+  if (screens[name]) {
+    screens[name].classList.add("active");
+    if (screens[name].scrollTop !== undefined) screens[name].scrollTop = 0;
+    currentScreen = name;
+  }
+  closeFab();
+  fab.style.display = (name === "landing") ? "" : "none";
+  // composer / login prompt visibility depends on auth state
+  updateComposerVisibility();
+}
+
+/* ─── FAB ────────────────────────────────────────────────────────────────── */
+const fab     = document.getElementById("fab");
+const fabMenu = document.getElementById("fabMenu");
+let fabOpen   = false;
+
+function openFab() {
+  fabOpen = true;
+  fab.classList.add("open");
+  fabMenu.classList.add("open");
+  fab.setAttribute("aria-expanded","true");
+}
+function closeFab() {
+  fabOpen = false;
+  fab.classList.remove("open");
+  fabMenu.classList.remove("open");
+  fab.setAttribute("aria-expanded","false");
+}
+
+fab.addEventListener("click", () => fabOpen ? closeFab() : openFab());
+
+fabMenu.querySelectorAll(".fab-menu-item").forEach(item => {
+  item.addEventListener("click", () => {
+    showScreen(item.dataset.target);
+  });
+});
+
+document.addEventListener("click", e => {
+  if (fabOpen && !fab.contains(e.target) && !fabMenu.contains(e.target)) closeFab();
+}, { capture: true });
+
+/* ─── About: back button ─────────────────────────────────────────────────── */
+document.getElementById("aboutBack").addEventListener("click", () => showScreen("landing"));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTE — Firebase-backed
+═══════════════════════════════════════════════════════════════════════════ */
+document.getElementById("noteBack").addEventListener("click", () => showScreen("landing"));
+
+const noteComposer    = document.getElementById("noteComposer");
+const noteTextarea    = document.getElementById("noteTextarea");
+const noteSendBtn     = document.getElementById("noteSendBtn");
+const noteAttachBtn   = document.getElementById("noteAttachBtn");
+const noteFileInput   = document.getElementById("noteFileInput");
+const noteFeed        = document.getElementById("noteFeed");
+const noteEmpty       = document.getElementById("noteEmpty");
+const noteAttachPreview = document.getElementById("noteAttachPreview");
+const loginBtn        = document.getElementById("loginBtn");
+const loginModal      = document.getElementById("loginModal");
+const loginPrompt     = document.getElementById("loginPrompt");
+
+/* ── Login / logout ───────────────────────────────────────────────────── */
+loginBtn.addEventListener("click", () => {
+  const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+  if (isAdmin) {
+    auth.signOut();
+  } else {
+    loginModal.style.display = "flex";
+    document.getElementById("loginEmail").focus();
+  }
+});
+
+document.getElementById("loginCancel").addEventListener("click", () => {
+  loginModal.style.display = "none";
+  document.getElementById("loginError").textContent = "";
+});
+
+document.getElementById("loginSubmit").addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass  = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  errEl.textContent = "";
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    loginModal.style.display = "none";
+    document.getElementById("loginPassword").value = "";
+  } catch (e) {
+    errEl.textContent = "Incorrect email or password.";
+  }
+});
+
+// Close modal on backdrop click
+loginModal.addEventListener("click", e => {
+  if (e.target === loginModal) {
+    loginModal.style.display = "none";
+    document.getElementById("loginError").textContent = "";
+  }
+});
+
+/* ── Detect file type ─────────────────────────────────────────────────── */
+function detectType(file) {
+  if (file.type.startsWith("image/"))  return "image";
+  if (file.type.startsWith("video/"))  return "video";
+  if (file.type.startsWith("audio/"))  return "audio";
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".glb") || name.endsWith(".gltf")) return "3d";
+  return "other";
+}
+
+/* ── Staged attachments: { file, objectURL, type } ───────────────────── */
+let stagedFiles = [];
+
+noteTextarea.addEventListener("input", () => {
+  noteTextarea.style.height = "auto";
+  noteTextarea.style.height = noteTextarea.scrollHeight + "px";
+  updateSendReady();
+});
+
+function updateSendReady() {
+  const hasContent = noteTextarea.value.trim().length > 0 || stagedFiles.length > 0;
+  noteSendBtn.classList.toggle("ready", hasContent);
+}
+
+noteAttachBtn.addEventListener("click", () => noteFileInput.click());
+
+noteFileInput.addEventListener("change", () => {
+  Array.from(noteFileInput.files).forEach(file => {
+    const url  = URL.createObjectURL(file);
+    const type = detectType(file);
+    stagedFiles.push({ file, url, type });
+    renderAttachThumb({ file, url, type }, stagedFiles.length - 1);
+  });
+  noteFileInput.value = "";
+  updateSendReady();
+});
+
+function renderAttachThumb({ url, type, file }, idx) {
+  const thumb = document.createElement("div");
+  thumb.className = "note-attach-thumb";
+  thumb.dataset.idx = idx;
+
+  if (type === "image") {
+    const img = document.createElement("img");
+    img.src = url; thumb.appendChild(img);
+  } else if (type === "video") {
+    const vid = document.createElement("video");
+    vid.src = url; vid.muted = true; thumb.appendChild(vid);
+  } else {
+    const lbl = document.createElement("span");
+    lbl.className = "note-attach-thumb-label";
+    lbl.textContent = type === "audio" ? "♪\n" + file.name.split(".").pop().toUpperCase()
+                    : type === "3d"    ? "3D\n" + file.name.split(".").pop().toUpperCase()
+                    : file.name.substring(0,8);
+    thumb.appendChild(lbl);
+  }
+
+  const rm = document.createElement("span");
+  rm.className = "note-attach-remove";
+  rm.textContent = "×";
+  rm.addEventListener("click", e => {
+    e.stopPropagation();
+    const i = +thumb.dataset.idx;
+    URL.revokeObjectURL(stagedFiles[i].url);
+    stagedFiles.splice(i, 1);
+    noteAttachPreview.innerHTML = "";
+    stagedFiles.forEach((f, ii) => renderAttachThumb(f, ii));
+    updateSendReady();
+  });
+  thumb.appendChild(rm);
+  noteAttachPreview.appendChild(thumb);
+}
+
+/* ── Upload file to Firebase Storage, return download URL ────────────── */
+async function uploadFile(file) {
+  const path = `notes/${Date.now()}_${file.name}`;
+  const storageRef = storage.ref(path);
+  const snap = await storageRef.put(file);
+  return snap.ref.getDownloadURL();
+}
+
+/* ── Submit post → Firestore ──────────────────────────────────────────── */
+noteSendBtn.addEventListener("click", submitPost);
+noteTextarea.addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitPost();
+});
+
+async function submitPost() {
+  if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+  const text  = noteTextarea.value.trim();
+  const files = [...stagedFiles];
+  if (!text && !files.length) return;
+
+  // Disable send while uploading
+  noteSendBtn.classList.remove("ready");
+  noteSendBtn.style.opacity = "0.4";
+
+  try {
+    // Upload all files to Storage
+    const attachments = await Promise.all(files.map(async ({ file, type }) => {
+      const url = await uploadFile(file);
+      return { type, url, name: file.name };
+    }));
+
+    // Save to Firestore
+    await db.collection("notes").add({
+      text,
+      attachments,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      author: currentUser.email,
+    });
+
+    // Reset composer
+    noteTextarea.value = "";
+    noteTextarea.style.height = "auto";
+    stagedFiles.forEach(f => URL.revokeObjectURL(f.url));
+    stagedFiles = [];
+    noteAttachPreview.innerHTML = "";
+    updateSendReady();
+  } catch (err) {
+    console.error("Post failed:", err);
+    alert("投稿に失敗しました: " + err.message);
+  } finally {
+    noteSendBtn.style.opacity = "";
+    updateSendReady();
+  }
+}
+
+/* ── Real-time listener from Firestore ───────────────────────────────── */
+const unsubPosts = db.collection("notes").orderBy("createdAt", "asc").onSnapshot(snapshot => {
+  // Build a map of existing post elements by doc ID
+  const existing = new Map();
+  noteFeed.querySelectorAll(".note-post[data-id]").forEach(el => {
+    existing.set(el.dataset.id, el);
+  });
+
+  const ids = new Set();
+  snapshot.forEach(docSnap => {
+    ids.add(docSnap.id);
+    if (!existing.has(docSnap.id)) {
+      const postEl = buildPost(docSnap.data(), docSnap.id);
+      noteFeed.appendChild(postEl);
+      existing.set(docSnap.id, postEl);
+    }
+  });
+
+  // Remove deleted posts
+  existing.forEach((el, id) => {
+    if (!ids.has(id)) {
+      el.style.opacity = "0";
+      el.style.transition = "opacity 200ms";
+      setTimeout(() => el.remove(), 200);
+    }
+  });
+
+  // Show/hide empty state
+  noteEmpty.style.display = (ids.size === 0) ? "" : "none";
+
+  // Scroll to bottom if on note screen
+  if (currentScreen === "note") {
+    const noteScreen = document.getElementById("screenNote");
+    requestAnimationFrame(() => { noteScreen.scrollTop = noteScreen.scrollHeight; });
+  }
+});
+
+/* ── Build post DOM from Firestore data ───────────────────────────────── */
+function buildPost(data, docId) {
+  const post = document.createElement("div");
+  post.className = "note-post";
+  post.dataset.id = docId;
+
+  // Text
+  if (data.text) {
+    const p = document.createElement("div");
+    p.className = "note-post-text";
+    p.textContent = data.text;
+    post.appendChild(p);
+  }
+
+  // Attachments (URLs from Storage)
+  (data.attachments || []).forEach(({ type, url, name }) => {
+    if (type === "image") {
+      const wrap = document.createElement("div");
+      wrap.className = "note-post-media";
+      const img = document.createElement("img");
+      img.src = url; img.loading = "lazy";
+      wrap.appendChild(img); post.appendChild(wrap);
+
+    } else if (type === "video") {
+      const wrap = document.createElement("div");
+      wrap.className = "note-post-media";
+      const vid = document.createElement("video");
+      vid.src = url; vid.controls = true; vid.playsInline = true;
+      vid.style.maxHeight = "60vw";
+      wrap.appendChild(vid); post.appendChild(wrap);
+
+    } else if (type === "audio") {
+      const wrap = document.createElement("div");
+      wrap.className = "note-post-audio";
+      const aud = document.createElement("audio");
+      aud.src = url; aud.controls = true;
+      wrap.appendChild(aud); post.appendChild(wrap);
+
+    } else if (type === "3d") {
+      const wrap = document.createElement("div");
+      wrap.className = "note-post-3d";
+      wrap.style.cssText = "display:flex;flex-direction:column;align-items:flex-start;padding:14px 16px;background:#0a0a0a;border-radius:3px;";
+      const lbl = document.createElement("span");
+      lbl.style.cssText = "font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#555;";
+      lbl.textContent = "3D — " + (name || "model");
+      wrap.appendChild(lbl);
+      post.appendChild(wrap);
+    }
+  });
+
+  // Meta row
+  const meta = document.createElement("div");
+  meta.className = "note-post-meta";
+
+  const time = document.createElement("span");
+  time.className = "note-post-time";
+  const ts = data.createdAt ? data.createdAt.toDate() : new Date();
+  time.textContent = ts.toLocaleString([], {
+    month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit"
+  });
+  meta.appendChild(time);
+
+  (data.attachments || []).forEach(({ type }) => {
+    const tag = document.createElement("span");
+    tag.className = "note-post-type";
+    tag.textContent = type;
+    meta.appendChild(tag);
+  });
+
+  // Delete button — admin only
+  const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+  if (isAdmin) {
+    const del = document.createElement("span");
+    del.className = "note-post-delete";
+    del.textContent = "delete";
+    del.addEventListener("click", async () => {
+      if (!confirm("Delete this post?")) return;
+      await db.collection("notes").doc(docId).delete();
+    });
+    meta.appendChild(del);
+  }
+
+  post.appendChild(meta);
+  return post;
+}
+
+/* ── Minimal 3D viewer fallback ───────────────────────────────────────── */
+function init3DViewer(canvas, url, file) {
+  const parent = canvas.parentElement;
+  parent.innerHTML = "";
+  parent.style.cssText = "display:flex;flex-direction:column;align-items:flex-start;padding:14px 16px;background:#0a0a0a;border-radius:3px;";
+  const lbl = document.createElement("span");
+  lbl.style.cssText = "font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#555;";
+  lbl.textContent = "3D — " + file.name;
+  parent.appendChild(lbl);
+}
+
+/* ─── About: greeting stack ──────────────────────────────────────────────── */
+const LANGS = [
+  { word: "Hello",       scale: 1.00 },         // EN
+  { word: "こんにちは",   scale: 0.76 },         // JA
+  { word: "你好",         scale: 1.18 },         // ZH
+  { word: "안녕하세요",   scale: 0.70 },         // KO
+  { word: "Hola",        scale: 1.02 },         // ES
+  { word: "Olá",         scale: 1.02 },         // PT
+  { word: "Привет",      scale: 0.90 },         // RU
+  { word: "Bonjour",     scale: 0.84 },         // FR
+  { word: "Hallo",       scale: 1.00 },         // DE
+  { word: "नमस्ते",       scale: 0.82 },         // HI
+  { word: "مرحبًا",      scale: 0.96, rtl:true },// AR
+];
+
+const BASE_FS = "clamp(28px, 8.5vw, 52px)";
+
+const stack = document.getElementById("langStack");
+LANGS.forEach((l, i) => {
+  const item = document.createElement("div");
+  item.className = "lang-item";
+  item.setAttribute("role", "button");
+  item.setAttribute("tabindex", "0");
+
+  const word = document.createElement("span");
+  word.className = "lang-word";
+  word.textContent = l.word;
+  word.style.fontSize = `calc(${BASE_FS} * ${l.scale})`;
+  if (l.rtl) { word.dir = "rtl"; word.style.fontFamily = "Georgia, serif"; }
+  item.appendChild(word);
+
+  // Black dot after every word except the last
+  if (i < LANGS.length - 1) {
+    const dot = document.createElement("span");
+    dot.className = "lang-dot";
+    item.appendChild(dot);
+  }
+
+  stack.appendChild(item);
+});
+
+/* ─── Project data ───────────────────────────────────────────────────────── */
+const TOTAL = 100;
+const pad3  = n => String(n).padStart(3,"0");
+const TAG_POOL = [
+  "Ongoing","Archive","Research","Object","System","Field",
+  "Index","Surface","Form","Light","Time","Space",
+  "Signal","Territory","Currency","Sovereign","Material","Network","Protocol","Fragment"
+];
+function deterministicTags(seed, count=3) {
+  let h = (seed * 2654435761) >>> 0;
+  const pool = [...TAG_POOL], out = [];
+  for (let i = 0; i < count; i++) {
+    h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
+    out.push(pool.splice(h % pool.length, 1)[0]);
+  }
+  return out;
+}
+
+/*
+  Media map — assign media to project slots:
+  MEDIA[1] = { type:"image", src:"./path/to/file.jpg" }
+  MEDIA[2] = { type:"video", src:"./path/to/file.mp4" }
+  MEDIA[3] = { type:"3d",   init: canvas => { // Three.js setup here
+  } }
+*/
+const MEDIA = {};
+
+const projects = Array.from({length: TOTAL}, (_, i) => ({
+  n: i+1,
+  name: `Project ${pad3(i+1)}`,
+  tags: deterministicTags(i+1, 3),
+  media: MEDIA[i+1] || null,
+}));
+
+function buildMedia(m, container) {
+  container.innerHTML = "";
+  if (!m) {
+    const q = document.createElement("span");
+    q.className = "grid-media-placeholder";
+    q.textContent = "?";
+    container.appendChild(q);
+    return;
+  }
+  if (m.type === "image") {
+    const img = document.createElement("img");
+    img.src = m.src; img.alt = ""; img.loading = "lazy";
+    container.appendChild(img);
+  } else if (m.type === "video") {
+    const vid = document.createElement("video");
+    vid.src = m.src; vid.muted = true; vid.loop = true;
+    vid.playsInline = true; vid.autoplay = true;
+    container.appendChild(vid);
+    vid.play().catch(() => {});
+  } else if (m.type === "3d" && typeof m.init === "function") {
+    const canvas = document.createElement("canvas");
+    container.appendChild(canvas);
+    m.init(canvas);
+  }
+}
+
+/* ─── Build archive ──────────────────────────────────────────────────────── */
+const gridView = document.getElementById("gridView");
+const listView = document.getElementById("listView");
+
+projects.forEach(p => {
+  // Grid cell
+  const cell = document.createElement("div");
+  cell.className = "grid-cell";
+  cell.dataset.idx = p.n - 1;
+
+  const mediaDiv = document.createElement("div");
+  mediaDiv.className = "grid-media";
+  buildMedia(p.media, mediaDiv);
+  cell.appendChild(mediaDiv);
+
+  const meta = document.createElement("div");
+  meta.className = "grid-meta";
+  meta.innerHTML = `
+    <span class="grid-tag">${p.tags[0]}</span>
+    <span class="grid-name">${p.name}</span>
+    <span class="grid-num">#${pad3(p.n)}</span>`;
+  cell.appendChild(meta);
+  gridView.appendChild(cell);
+
+  // List row
+  const li = document.createElement("li");
+  li.className = "project-row";
+  li.dataset.idx = p.n - 1;
+  li.innerHTML = `
+    <span class="row-num">#${pad3(p.n)}</span>
+    <span class="row-name">${p.name}</span>
+    <span class="row-arrow">›</span>`;
+  listView.appendChild(li);
+});
+
+/* ─── View toggle ────────────────────────────────────────────────────────── */
+document.getElementById("btnGrid").addEventListener("click", () => {
+  gridView.classList.remove("hidden"); listView.classList.add("hidden");
+  document.getElementById("btnGrid").classList.add("active");
+  document.getElementById("btnList").classList.remove("active");
+});
+document.getElementById("btnList").addEventListener("click", () => {
+  listView.classList.remove("hidden"); gridView.classList.add("hidden");
+  document.getElementById("btnList").classList.add("active");
+  document.getElementById("btnGrid").classList.remove("active");
+});
+
+/* ─── Detail ─────────────────────────────────────────────────────────────── */
+document.getElementById("archBack").addEventListener("click", () => showScreen("landing"));
+
+const detail     = document.getElementById("detail");
+const detailTile = document.getElementById("detailTile");
+const detailQ    = document.getElementById("detailQ");
+const detailNum  = document.getElementById("detailNum");
+const detailName = document.getElementById("detailName");
+const detailTags = document.getElementById("detailTags");
+
+function openDetail(p) {
+  detailNum.textContent  = `#${pad3(p.n)}`;
+  detailName.textContent = p.name;
+  detailTags.innerHTML   = p.tags.map(t => `<span class="detail-tag">${t}</span>`).join("");
+  detailTile.querySelectorAll("img,video,canvas").forEach(el => el.remove());
+  if (p.media) { detailQ.style.display = "none"; buildMedia(p.media, detailTile); }
+  else         { detailQ.style.display = ""; }
+  detail.classList.add("open");
+}
+function closeDetail() { detail.classList.remove("open"); }
+
+let tMoved = false;
+function addTapHandler(el, fn) {
+  el.addEventListener("touchstart", () => { tMoved = false; }, {passive: true});
+  el.addEventListener("touchmove",  () => { tMoved = true;  }, {passive: true});
+  el.addEventListener("click", e => {
+    if (tMoved) return;
+    const cell = e.target.closest("[data-idx]");
+    if (!cell) return;
+    fn(projects[+cell.dataset.idx]);
+  });
+}
+addTapHandler(gridView, openDetail);
+addTapHandler(listView, openDetail);
+
+document.getElementById("detailBack").addEventListener("click", closeDetail);
+let swipeY = 0;
+detail.addEventListener("touchstart", e => { swipeY = e.touches[0].clientY; }, {passive: true});
+detail.addEventListener("touchend",   e => { if (e.changedTouches[0].clientY - swipeY > 60) closeDetail(); }, {passive: true});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
+
+/* ─── Firebase Auth state — registered last so all vars/fns exist ─────────── */
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  const isAdmin = user && user.email === ADMIN_EMAIL;
+  updateComposerVisibility();
+  updateLoginUI(isAdmin);
+});
+</script>
+</body>
+</html>
