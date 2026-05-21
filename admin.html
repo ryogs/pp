@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>SOVEREIGN — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  min-height: 100%;
+  background: #f8f8f8;
+  color: #000;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+button { cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+/* ─── Login screen ──────────────────────────────────────────────────────── */
+#loginScreen {
+  position: fixed; inset: 0;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.login-box {
+  width: min(360px, 90vw);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.login-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: #999; margin-bottom: 8px;
+}
+.login-field {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.login-field label {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #aaa;
+}
+.login-field input {
+  border: none; border-bottom: 1px solid #e0e0e0;
+  padding: 8px 0; font-size: 15px; font-weight: 300; outline: none;
+  background: transparent;
+  transition: border-color 150ms;
+}
+.login-field input:focus { border-color: #000; }
+.login-error {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; color: #e00; min-height: 14px;
+}
+.btn-primary {
+  background: #000; color: #fff;
+  border: none; border-radius: 9999px;
+  padding: 12px 24px; font-size: 13px; font-weight: 500;
+  transition: background 130ms;
+}
+.btn-primary:hover { background: #222; }
+.btn-primary:active { background: #444; }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+
+/* ─── App shell ─────────────────────────────────────────────────────────── */
+#app { display: none; }
+#app.visible { display: block; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: #fff;
+  border-bottom: 1px solid #000;
+  height: 48px;
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 16px;
+}
+.topbar-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+}
+.topbar-signout {
+  margin-left: auto;
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #999; background: none; border: none; padding: 4px 0;
+  transition: color 130ms;
+}
+.topbar-signout:hover { color: #000; }
+
+/* ─── Tab nav ───────────────────────────────────────────────────────────── */
+.tabnav {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  padding: 0 20px;
+}
+.tab {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: #aaa; background: none; border: none;
+  padding: 14px 16px 12px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 130ms, border-color 130ms;
+}
+.tab.active { color: #000; border-bottom-color: #000; }
+.tab:hover { color: #555; }
+
+/* ─── Panels ────────────────────────────────────────────────────────────── */
+.panel { display: none; padding: 24px 20px 80px; max-width: 640px; margin: 0 auto; }
+.panel.active { display: block; }
+
+/* ─── Form card ─────────────────────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.card-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: #999; margin-bottom: 16px;
+}
+.field {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 14px;
+}
+.field:last-child { margin-bottom: 0; }
+.field label {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: #aaa;
+}
+.field input[type="text"],
+.field textarea {
+  border: 1px solid #e8e8e8; border-radius: 4px;
+  padding: 9px 12px; font-size: 14px; font-weight: 300;
+  outline: none; background: #fafafa; width: 100%;
+  transition: border-color 150ms, background 150ms;
+}
+.field input[type="text"]:focus,
+.field textarea:focus { border-color: #000; background: #fff; }
+.field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+/* File upload zone */
+.upload-zone {
+  border: 1.5px dashed #e0e0e0; border-radius: 4px;
+  padding: 24px; text-align: center;
+  cursor: pointer; background: #fafafa;
+  transition: border-color 150ms, background 150ms;
+  position: relative;
+}
+.upload-zone:hover { border-color: #999; background: #f4f4f4; }
+.upload-zone.has-file { border-color: #000; background: #fff; }
+.upload-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #bbb;
+  pointer-events: none;
+}
+.upload-preview {
+  margin-top: 10px; display: none;
+}
+.upload-preview img,
+.upload-preview video {
+  max-width: 100%; max-height: 200px; border-radius: 3px;
+  border: 1px solid #e8e8e8; display: block; margin: 0 auto;
+}
+
+/* Tags input */
+.tags-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  border: 1px solid #e8e8e8; border-radius: 4px;
+  padding: 7px 10px; background: #fafafa; min-height: 40px;
+  cursor: text;
+  transition: border-color 150ms;
+}
+.tags-wrap:focus-within { border-color: #000; background: #fff; }
+.tag-chip {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: #000; color: #fff;
+  padding: 3px 8px; border-radius: 2px;
+  display: flex; align-items: center; gap: 5px;
+}
+.tag-chip-rm {
+  cursor: pointer; opacity: 0.6; font-size: 10px; line-height: 1;
+}
+.tag-chip-rm:hover { opacity: 1; }
+.tags-input {
+  border: none; outline: none; background: transparent;
+  font-size: 13px; font-weight: 300; min-width: 80px; flex: 1;
+}
+
+/* Submit row */
+.submit-row {
+  display: flex; align-items: center; gap: 12px; margin-top: 16px;
+}
+.submit-status {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.1em; color: #999;
+}
+.submit-status.ok { color: #2a9; }
+.submit-status.err { color: #e00; }
+
+/* ─── Post list ─────────────────────────────────────────────────────────── */
+.post-list { display: flex; flex-direction: column; gap: 2px; }
+.post-item {
+  background: #fff; border: 1px solid #efefef; border-radius: 4px;
+  padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.post-thumb {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: 3px; background: #f0f0f0;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.post-thumb img, .post-thumb video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.post-thumb-placeholder {
+  font-family: "Geist Mono", monospace;
+  font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #bbb; text-align: center; padding: 4px; line-height: 1.4;
+}
+.post-body { flex: 1; min-width: 0; }
+.post-title {
+  font-size: 14px; font-weight: 400; margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.post-meta-row {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.08em; color: #bbb;
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.post-delete {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #e55; background: none; border: none;
+  padding: 4px; flex-shrink: 0; align-self: center;
+  transition: color 130ms;
+}
+.post-delete:hover { color: #c00; }
+
+.list-empty {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #ccc; padding: 32px 0; text-align: center;
+}
+.list-loading {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #ddd; padding: 20px 0; text-align: center;
+}
+
+/* Upload progress */
+.progress-bar-wrap {
+  height: 2px; background: #f0f0f0; border-radius: 1px;
+  margin-top: 8px; display: none;
+}
+.progress-bar-wrap.visible { display: block; }
+.progress-bar {
+  height: 100%; background: #000; border-radius: 1px;
+  transition: width 200ms ease;
+  width: 0%;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Login screen ──────────────────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-title">Sovereign Archive — Admin</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" autocomplete="email" placeholder="admin@example.com"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPassword" autocomplete="current-password"/>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn-primary" id="loginSubmit">Sign in</button>
+  </div>
+</div>
+
+<!-- ── App ───────────────────────────────────────────────────────────────── -->
+<div id="app">
+  <div class="topbar">
+    <span class="topbar-title">Admin</span>
+    <button class="topbar-signout" id="signOutBtn">Sign out</button>
+  </div>
+
+  <div class="tabnav">
+    <button class="tab active" data-tab="projects">Projects</button>
+    <button class="tab" data-tab="notes">Notes</button>
+  </div>
+
+  <!-- ── Projects panel ──────────────────────────────────────────────────── -->
+  <div class="panel active" id="panelProjects">
+
+    <div class="card">
+      <div class="card-title">New Project</div>
+
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="projTitle" placeholder="Project name"/>
+      </div>
+
+      <div class="field">
+        <label>Tags (Enter to add)</label>
+        <div class="tags-wrap" id="projTagsWrap">
+          <input class="tags-input" id="projTagsInput" placeholder="Add tag…"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Media (image / video)</label>
+        <div class="upload-zone" id="projUploadZone">
+          <input type="file" id="projFile" accept="image/*,video/*"/>
+          <div class="upload-label" id="projUploadLabel">Tap to select file</div>
+          <div class="upload-preview" id="projUploadPreview"></div>
+        </div>
+        <div class="progress-bar-wrap" id="projProgress">
+          <div class="progress-bar" id="projProgressBar"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Description (optional)</label>
+        <textarea id="projDesc" placeholder="Notes about this project…"></textarea>
+      </div>
+
+      <div class="submit-row">
+        <button class="btn-primary" id="projSubmit">Post</button>
+        <span class="submit-status" id="projStatus"></span>
+      </div>
+    </div>
+
+    <div class="card-title" style="padding: 0 0 12px;">All Projects</div>
+    <div class="post-list" id="projList">
+      <div class="list-loading">Loading…</div>
+    </div>
+  </div>
+
+  <!-- ── Notes panel ─────────────────────────────────────────────────────── -->
+  <div class="panel" id="panelNotes">
+
+    <div class="card">
+      <div class="card-title">New Note</div>
+
+      <div class="field">
+        <label>Text</label>
+        <textarea id="noteText" placeholder="Write something…" style="min-height:100px;"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Media (image / video / audio)</label>
+        <div class="upload-zone" id="noteUploadZone">
+          <input type="file" id="noteFile" accept="image/*,video/*,audio/*"/>
+          <div class="upload-label" id="noteUploadLabel">Tap to select file</div>
+          <div class="upload-preview" id="noteUploadPreview"></div>
+        </div>
+        <div class="progress-bar-wrap" id="noteProgress">
+          <div class="progress-bar" id="noteProgressBar"></div>
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button class="btn-primary" id="noteSubmit">Post</button>
+        <span class="submit-status" id="noteStatus"></span>
+      </div>
+    </div>
+
+    <div class="card-title" style="padding: 0 0 12px;">All Notes</div>
+    <div class="post-list" id="noteList">
+      <div class="list-loading">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<script>
+/* ─── Firebase init ─────────────────────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBt8YrBaUZYdHVh_L7xli0HKm7EfX6n_BI",
+  authDomain:        "projectp-fc779.firebaseapp.com",
+  projectId:         "projectp-fc779",
+  storageBucket:     "projectp-fc779.firebasestorage.app",
+  messagingSenderId: "554116936611",
+  appId:             "1:554116936611:web:86bf455fbd763a149de016",
+};
+const ADMIN_EMAIL = "paulody1021@gmail.com";
+
+const app     = firebase.initializeApp(firebaseConfig);
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+/* ─── Auth ──────────────────────────────────────────────────────────────── */
+const loginScreen = document.getElementById("loginScreen");
+const appEl       = document.getElementById("app");
+
+document.getElementById("loginSubmit").addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass  = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  errEl.textContent = "";
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (e) {
+    errEl.textContent = "Incorrect email or password.";
+  }
+});
+
+document.getElementById("loginPassword").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("loginSubmit").click();
+});
+
+document.getElementById("signOutBtn").addEventListener("click", () => auth.signOut());
+
+auth.onAuthStateChanged(user => {
+  if (user && user.email === ADMIN_EMAIL) {
+    loginScreen.style.display = "none";
+    appEl.classList.add("visible");
+    initListeners();
+  } else {
+    loginScreen.style.display = "flex";
+    appEl.classList.remove("visible");
+  }
+});
+
+/* ─── Tab nav ───────────────────────────────────────────────────────────── */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel" + capitalize(tab.dataset.tab)).classList.add("active");
+  });
+});
+function capitalize(s) { return s[0].toUpperCase() + s.slice(1); }
+
+/* ─── Helpers ───────────────────────────────────────────────────────────── */
+function detectType(file) {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  return "other";
+}
+
+async function uploadFile(file, progressBar, progressWrap) {
+  const path = `uploads/${Date.now()}_${file.name}`;
+  const ref  = storage.ref(path);
+  const task = ref.put(file);
+
+  progressWrap.classList.add("visible");
+  await new Promise((res, rej) => {
+    task.on("state_changed",
+      snap => {
+        const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+        progressBar.style.width = pct + "%";
+      },
+      rej,
+      res
+    );
+  });
+  progressWrap.classList.remove("visible");
+  progressBar.style.width = "0%";
+  return task.snapshot.ref.getDownloadURL();
+}
+
+function timeStr(ts) {
+  if (!ts) return "—";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString([], { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+}
+
+/* ─── File preview ──────────────────────────────────────────────────────── */
+function setupFilePreview(inputId, zoneId, labelId, previewId) {
+  const input   = document.getElementById(inputId);
+  const zone    = document.getElementById(zoneId);
+  const label   = document.getElementById(labelId);
+  const preview = document.getElementById(previewId);
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+    const type = detectType(file);
+    const url  = URL.createObjectURL(file);
+    preview.innerHTML = "";
+    if (type === "image") {
+      const img = document.createElement("img");
+      img.src = url; preview.appendChild(img);
+    } else if (type === "video") {
+      const vid = document.createElement("video");
+      vid.src = url; vid.controls = true; vid.muted = true;
+      preview.appendChild(vid);
+    } else {
+      const lbl = document.createElement("div");
+      lbl.style.cssText = "font-family:'Geist Mono',monospace;font-size:9px;color:#888;padding:8px 0;";
+      lbl.textContent = file.name;
+      preview.appendChild(lbl);
+    }
+    preview.style.display = "block";
+    label.style.display = "none";
+    zone.classList.add("has-file");
+  });
+}
+
+/* ─── Tags input ────────────────────────────────────────────────────────── */
+function setupTagsInput(wrapId, inputId) {
+  const wrap  = document.getElementById(wrapId);
+  const input = document.getElementById(inputId);
+  let tags = [];
+
+  function renderTags() {
+    wrap.querySelectorAll(".tag-chip").forEach(el => el.remove());
+    tags.forEach((tag, i) => {
+      const chip = document.createElement("span");
+      chip.className = "tag-chip";
+      chip.innerHTML = `${tag}<span class="tag-chip-rm" data-i="${i}">×</span>`;
+      chip.querySelector(".tag-chip-rm").addEventListener("click", () => {
+        tags.splice(i, 1); renderTags();
+      });
+      wrap.insertBefore(chip, input);
+    });
+  }
+
+  input.addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.key === ",") && input.value.trim()) {
+      e.preventDefault();
+      tags.push(input.value.trim());
+      input.value = "";
+      renderTags();
+    }
+    if (e.key === "Backspace" && !input.value && tags.length) {
+      tags.pop(); renderTags();
+    }
+  });
+
+  wrap.addEventListener("click", () => input.focus());
+  return { getTags: () => [...tags], clearTags: () => { tags = []; renderTags(); } };
+}
+
+/* ─── Init listeners (called once after login) ──────────────────────────── */
+let listenersStarted = false;
+function initListeners() {
+  if (listenersStarted) return;
+  listenersStarted = true;
+
+  setupFilePreview("projFile", "projUploadZone", "projUploadLabel", "projUploadPreview");
+  setupFilePreview("noteFile", "noteUploadZone", "noteUploadLabel", "noteUploadPreview");
+  const projTags = setupTagsInput("projTagsWrap", "projTagsInput");
+
+  /* ── Project submit ─────────────────────────────────────────────────── */
+  document.getElementById("projSubmit").addEventListener("click", async () => {
+    const title = document.getElementById("projTitle").value.trim();
+    const desc  = document.getElementById("projDesc").value.trim();
+    const tags  = projTags.getTags();
+    const file  = document.getElementById("projFile").files[0];
+    const statusEl = document.getElementById("projStatus");
+
+    if (!title) { statusEl.textContent = "Title required."; statusEl.className = "submit-status err"; return; }
+
+    const btn = document.getElementById("projSubmit");
+    btn.disabled = true;
+    statusEl.textContent = file ? "Uploading…" : "Saving…";
+    statusEl.className = "submit-status";
+
+    try {
+      let mediaUrl = null, mediaType = null;
+      if (file) {
+        mediaUrl  = await uploadFile(file, document.getElementById("projProgressBar"), document.getElementById("projProgress"));
+        mediaType = detectType(file);
+      }
+      await db.collection("projects").add({
+        title, desc, tags, mediaUrl, mediaType,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        author: auth.currentUser.email,
+      });
+      // reset
+      document.getElementById("projTitle").value = "";
+      document.getElementById("projDesc").value  = "";
+      document.getElementById("projFile").value  = "";
+      document.getElementById("projUploadPreview").style.display = "none";
+      document.getElementById("projUploadPreview").innerHTML = "";
+      document.getElementById("projUploadLabel").style.display = "";
+      document.getElementById("projUploadZone").classList.remove("has-file");
+      projTags.clearTags();
+      statusEl.textContent = "Posted ✓"; statusEl.className = "submit-status ok";
+      setTimeout(() => { statusEl.textContent = ""; }, 3000);
+    } catch (e) {
+      statusEl.textContent = "Error: " + e.message; statusEl.className = "submit-status err";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ── Note submit ────────────────────────────────────────────────────── */
+  document.getElementById("noteSubmit").addEventListener("click", async () => {
+    const text = document.getElementById("noteText").value.trim();
+    const file = document.getElementById("noteFile").files[0];
+    const statusEl = document.getElementById("noteStatus");
+
+    if (!text && !file) { statusEl.textContent = "Text or file required."; statusEl.className = "submit-status err"; return; }
+
+    const btn = document.getElementById("noteSubmit");
+    btn.disabled = true;
+    statusEl.textContent = file ? "Uploading…" : "Saving…";
+    statusEl.className = "submit-status";
+
+    try {
+      let attachments = [];
+      if (file) {
+        const url  = await uploadFile(file, document.getElementById("noteProgressBar"), document.getElementById("noteProgress"));
+        const type = detectType(file);
+        attachments = [{ url, type, name: file.name }];
+      }
+      await db.collection("notes").add({
+        text, attachments,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        author: auth.currentUser.email,
+      });
+      document.getElementById("noteText").value = "";
+      document.getElementById("noteFile").value = "";
+      document.getElementById("noteUploadPreview").style.display = "none";
+      document.getElementById("noteUploadPreview").innerHTML = "";
+      document.getElementById("noteUploadLabel").style.display = "";
+      document.getElementById("noteUploadZone").classList.remove("has-file");
+      statusEl.textContent = "Posted ✓"; statusEl.className = "submit-status ok";
+      setTimeout(() => { statusEl.textContent = ""; }, 3000);
+    } catch (e) {
+      statusEl.textContent = "Error: " + e.message; statusEl.className = "submit-status err";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ── Project list ───────────────────────────────────────────────────── */
+  db.collection("projects").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    const list = document.getElementById("projList");
+    list.innerHTML = "";
+    if (snapshot.empty) {
+      list.innerHTML = '<div class="list-empty">No projects yet</div>'; return;
+    }
+    snapshot.forEach(docSnap => {
+      const d  = docSnap.data();
+      const id = docSnap.id;
+      const item = document.createElement("div");
+      item.className = "post-item";
+
+      const thumb = document.createElement("div");
+      thumb.className = "post-thumb";
+      if (d.mediaUrl && d.mediaType === "image") {
+        const img = document.createElement("img"); img.src = d.mediaUrl; thumb.appendChild(img);
+      } else if (d.mediaUrl && d.mediaType === "video") {
+        const vid = document.createElement("video"); vid.src = d.mediaUrl; vid.muted = true; thumb.appendChild(vid);
+      } else {
+        const ph = document.createElement("div"); ph.className = "post-thumb-placeholder";
+        ph.textContent = (d.title || "?")[0].toUpperCase(); thumb.appendChild(ph);
+      }
+
+      const body = document.createElement("div"); body.className = "post-body";
+      body.innerHTML = `
+        <div class="post-title">${d.title || "Untitled"}</div>
+        <div class="post-meta-row">
+          <span>${timeStr(d.createdAt)}</span>
+          ${(d.tags || []).map(t => `<span>${t}</span>`).join("")}
+        </div>`;
+
+      const del = document.createElement("button");
+      del.className = "post-delete"; del.textContent = "delete";
+      del.addEventListener("click", async () => {
+        if (!confirm(`Delete "${d.title}"?`)) return;
+        await db.collection("projects").doc(id).delete();
+      });
+
+      item.appendChild(thumb); item.appendChild(body); item.appendChild(del);
+      list.appendChild(item);
+    });
+  });
+
+  /* ── Note list ──────────────────────────────────────────────────────── */
+  db.collection("notes").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    const list = document.getElementById("noteList");
+    list.innerHTML = "";
+    if (snapshot.empty) {
+      list.innerHTML = '<div class="list-empty">No notes yet</div>'; return;
+    }
+    snapshot.forEach(docSnap => {
+      const d  = docSnap.data();
+      const id = docSnap.id;
+      const item = document.createElement("div");
+      item.className = "post-item";
+
+      const thumb = document.createElement("div");
+      thumb.className = "post-thumb";
+      const att = d.attachments && d.attachments[0];
+      if (att && att.type === "image") {
+        const img = document.createElement("img"); img.src = att.url; thumb.appendChild(img);
+      } else if (att && att.type === "video") {
+        const vid = document.createElement("video"); vid.src = att.url; vid.muted = true; thumb.appendChild(vid);
+      } else if (att) {
+        const ph = document.createElement("div"); ph.className = "post-thumb-placeholder";
+        ph.textContent = att.type.toUpperCase(); thumb.appendChild(ph);
+      } else {
+        const ph = document.createElement("div"); ph.className = "post-thumb-placeholder";
+        ph.textContent = "TXT"; thumb.appendChild(ph);
+      }
+
+      const body = document.createElement("div"); body.className = "post-body";
+      const preview = (d.text || "").slice(0, 80) + ((d.text || "").length > 80 ? "…" : "");
+      body.innerHTML = `
+        <div class="post-title">${preview || "(no text)"}</div>
+        <div class="post-meta-row"><span>${timeStr(d.createdAt)}</span></div>`;
+
+      const del = document.createElement("button");
+      del.className = "post-delete"; del.textContent = "delete";
+      del.addEventListener("click", async () => {
+        if (!confirm("Delete this note?")) return;
+        await db.collection("notes").doc(id).delete();
+      });
+
+      item.appendChild(thumb); item.appendChild(body); item.appendChild(del);
+      list.appendChild(item);
+    });
+  });
+}
+</script>
+</body>
+</html>
