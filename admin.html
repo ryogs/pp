@@ -4,382 +4,405 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="robots" content="noindex, nofollow"/>
-<title>SOVEREIGN — Admin</title>
+<title>admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   min-height: 100%;
-  background: #f8f8f8;
-  color: #000;
+  background: #fff;
+  color: #111;
   font-family: "Geist", system-ui, sans-serif;
   font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-button { cursor: pointer; font-family: inherit; }
-input, textarea, select { font-family: inherit; }
+button, input, textarea, select { font-family: inherit; font-size: inherit; }
+button { cursor: pointer; background: none; border: none; padding: 0; }
+a { color: inherit; text-decoration: none; }
 
-/* ─── Login screen ──────────────────────────────────────────────────────── */
+/* ── Login ──────────────────────────────────────────────────────────────── */
 #loginScreen {
   position: fixed; inset: 0;
   background: #fff;
   display: flex; align-items: center; justify-content: center;
-  z-index: 100;
 }
-.login-box {
-  width: min(360px, 90vw);
-  display: flex; flex-direction: column; gap: 16px;
+.login-inner {
+  width: min(320px, 88vw);
 }
-.login-title {
+.login-site {
   font-family: "Geist Mono", monospace;
-  font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
-  color: #999; margin-bottom: 8px;
+  font-size: 11px; letter-spacing: 0.04em; color: #aaa;
+  margin-bottom: 32px;
 }
-.login-field {
-  display: flex; flex-direction: column; gap: 6px;
+.login-row {
+  display: flex; align-items: baseline; gap: 12px;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 10px 0;
 }
-.login-field label {
+.login-row:first-of-type { border-top: 1px solid #e8e8e8; }
+.login-row label {
   font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #aaa;
+  font-size: 10px; letter-spacing: 0.06em; color: #bbb;
+  width: 60px; flex-shrink: 0;
 }
-.login-field input {
-  border: none; border-bottom: 1px solid #e0e0e0;
-  padding: 8px 0; font-size: 15px; font-weight: 300; outline: none;
+.login-row input {
+  flex: 1; border: none; outline: none;
+  font-size: 14px; font-weight: 300; color: #111;
   background: transparent;
-  transition: border-color 150ms;
 }
-.login-field input:focus { border-color: #000; }
+.login-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 20px;
+}
 .login-error {
   font-family: "Geist Mono", monospace;
-  font-size: 8px; color: #e00; min-height: 14px;
+  font-size: 10px; color: #c00; min-height: 14px;
 }
-.btn-primary {
-  background: #000; color: #fff;
-  border: none; border-radius: 9999px;
-  padding: 12px 24px; font-size: 13px; font-weight: 500;
-  transition: background 130ms;
+.btn-submit {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.08em;
+  color: #111; border: 1px solid #e0e0e0;
+  padding: 7px 16px; border-radius: 2px;
+  transition: border-color 120ms, color 120ms;
 }
-.btn-primary:hover { background: #222; }
-.btn-primary:active { background: #444; }
-.btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+.btn-submit:hover { border-color: #111; }
+.btn-submit:disabled { color: #ccc; border-color: #eee; cursor: not-allowed; }
 
-/* ─── App shell ─────────────────────────────────────────────────────────── */
+/* ── App ────────────────────────────────────────────────────────────────── */
 #app { display: none; }
 #app.visible { display: block; }
 
-.topbar {
-  position: sticky; top: 0; z-index: 50;
-  background: #fff;
-  border-bottom: 1px solid #000;
-  height: 48px;
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.header {
   display: flex; align-items: center;
-  padding: 0 20px; gap: 16px;
-}
-.topbar-title {
-  font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
-}
-.topbar-signout {
-  margin-left: auto;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: #999; background: none; border: none; padding: 4px 0;
-  transition: color 130ms;
-}
-.topbar-signout:hover { color: #000; }
-
-/* ─── Tab nav ───────────────────────────────────────────────────────────── */
-.tabnav {
-  display: flex;
-  border-bottom: 1px solid #e0e0e0;
-  background: #fff;
   padding: 0 20px;
+  height: 44px;
+  border-bottom: 1px solid #e8e8e8;
 }
-.tab {
+.header-title {
   font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: #aaa; background: none; border: none;
-  padding: 14px 16px 12px;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color 130ms, border-color 130ms;
+  font-size: 11px; letter-spacing: 0.04em; color: #aaa;
 }
-.tab.active { color: #000; border-bottom-color: #000; }
-.tab:hover { color: #555; }
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 20px; }
+.header-tab {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px; letter-spacing: 0.04em;
+  color: #bbb; padding: 4px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 120ms, border-color 120ms;
+}
+.header-tab.active { color: #111; border-bottom-color: #111; }
+.header-tab:hover:not(.active) { color: #555; }
+.header-signout {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.04em; color: #ccc;
+  transition: color 120ms;
+}
+.header-signout:hover { color: #111; }
 
-/* ─── Panels ────────────────────────────────────────────────────────────── */
-.panel { display: none; padding: 24px 20px 80px; max-width: 640px; margin: 0 auto; }
+/* ── Panels ─────────────────────────────────────────────────────────────── */
+.panel { display: none; max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
 .panel.active { display: block; }
 
-/* ─── Form card ─────────────────────────────────────────────────────────── */
-.card {
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-.card-title {
+/* ── Section label ──────────────────────────────────────────────────────── */
+.section-label {
   font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: #999; margin-bottom: 16px;
-}
-.field {
-  display: flex; flex-direction: column; gap: 6px;
-  margin-bottom: 14px;
-}
-.field:last-child { margin-bottom: 0; }
-.field label {
-  font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: #aaa;
-}
-.field input[type="text"],
-.field textarea {
-  border: 1px solid #e8e8e8; border-radius: 4px;
-  padding: 9px 12px; font-size: 14px; font-weight: 300;
-  outline: none; background: #fafafa; width: 100%;
-  transition: border-color 150ms, background 150ms;
-}
-.field input[type="text"]:focus,
-.field textarea:focus { border-color: #000; background: #fff; }
-.field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
-
-/* File upload zone */
-.upload-zone {
-  border: 1.5px dashed #e0e0e0; border-radius: 4px;
-  padding: 24px; text-align: center;
-  cursor: pointer; background: #fafafa;
-  transition: border-color 150ms, background 150ms;
-  position: relative;
-}
-.upload-zone:hover { border-color: #999; background: #f4f4f4; }
-.upload-zone.has-file { border-color: #000; background: #fff; }
-.upload-zone input[type="file"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
-.upload-label {
-  font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #bbb;
-  pointer-events: none;
-}
-.upload-preview {
-  margin-top: 10px; display: none;
-}
-.upload-preview img,
-.upload-preview video {
-  max-width: 100%; max-height: 200px; border-radius: 3px;
-  border: 1px solid #e8e8e8; display: block; margin: 0 auto;
+  font-size: 10px; letter-spacing: 0.08em; color: #bbb;
+  padding: 20px 0 10px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 0;
+  text-transform: uppercase;
 }
 
-/* Tags input */
-.tags-wrap {
-  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-  border: 1px solid #e8e8e8; border-radius: 4px;
-  padding: 7px 10px; background: #fafafa; min-height: 40px;
-  cursor: text;
-  transition: border-color 150ms;
+/* ── Inline form ────────────────────────────────────────────────────────── */
+.form-row {
+  display: flex; align-items: baseline; gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 11px 0;
 }
-.tags-wrap:focus-within { border-color: #000; background: #fff; }
+.form-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.04em; color: #ccc;
+  width: 72px; flex-shrink: 0; padding-top: 1px;
+}
+.form-input {
+  flex: 1; border: none; outline: none;
+  font-size: 14px; font-weight: 300; color: #111;
+  background: transparent;
+}
+.form-input::placeholder { color: #ddd; }
+.form-textarea {
+  flex: 1; border: none; outline: none; resize: none;
+  font-size: 14px; font-weight: 300; color: #111; line-height: 1.5;
+  background: transparent; min-height: 56px;
+  overflow: hidden;
+}
+.form-textarea::placeholder { color: #ddd; }
+
+/* Tags */
+.tags-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 9px 0;
+  flex-wrap: wrap;
+}
+.tags-chips {
+  display: flex; flex-wrap: wrap; gap: 5px; align-items: center; flex: 1;
+}
 .tag-chip {
   font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
-  background: #000; color: #fff;
-  padding: 3px 8px; border-radius: 2px;
-  display: flex; align-items: center; gap: 5px;
+  font-size: 9px; letter-spacing: 0.06em;
+  color: #888; border: 1px solid #e0e0e0; border-radius: 2px;
+  padding: 2px 7px; display: flex; align-items: center; gap: 4px;
 }
-.tag-chip-rm {
-  cursor: pointer; opacity: 0.6; font-size: 10px; line-height: 1;
-}
-.tag-chip-rm:hover { opacity: 1; }
-.tags-input {
+.tag-chip-rm { color: #ccc; font-size: 11px; cursor: pointer; }
+.tag-chip-rm:hover { color: #888; }
+.tags-input-inline {
   border: none; outline: none; background: transparent;
-  font-size: 13px; font-weight: 300; min-width: 80px; flex: 1;
+  font-size: 13px; font-weight: 300; color: #111;
+  min-width: 80px;
+}
+.tags-input-inline::placeholder { color: #ddd; }
+
+/* File row */
+.file-row {
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 11px 0;
+}
+.file-label-col {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.04em; color: #ccc;
+  width: 72px; flex-shrink: 0;
+}
+.file-pick {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.04em; color: #aaa;
+  border: 1px solid #e8e8e8; border-radius: 2px;
+  padding: 5px 12px; cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+  position: relative; overflow: hidden;
+}
+.file-pick:hover { border-color: #bbb; color: #555; }
+.file-pick input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+}
+.file-name {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; color: #888; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-clear {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; color: #ccc;
+  transition: color 120ms;
+}
+.file-clear:hover { color: #c00; }
+
+/* Preview */
+.file-preview {
+  padding: 8px 0 4px 84px;
+  display: none;
+}
+.file-preview img, .file-preview video {
+  max-height: 140px; max-width: 100%;
+  border: 1px solid #f0f0f0; border-radius: 2px;
+  display: block;
+}
+
+/* Progress */
+.progress-row {
+  padding: 4px 0 4px 84px;
+  display: none;
+}
+.progress-track {
+  height: 1px; background: #f0f0f0; border-radius: 1px;
+}
+.progress-fill {
+  height: 100%; background: #111; border-radius: 1px;
+  transition: width 200ms ease; width: 0%;
 }
 
 /* Submit row */
 .submit-row {
-  display: flex; align-items: center; gap: 12px; margin-top: 16px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 0 0;
 }
-.submit-status {
+.btn-post {
   font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.1em; color: #999;
+  font-size: 10px; letter-spacing: 0.08em;
+  color: #111; border: 1px solid #e0e0e0;
+  padding: 7px 18px; border-radius: 2px;
+  transition: border-color 120ms;
 }
-.submit-status.ok { color: #2a9; }
-.submit-status.err { color: #e00; }
+.btn-post:hover { border-color: #111; }
+.btn-post:disabled { color: #ccc; border-color: #eee; cursor: not-allowed; }
+.submit-msg {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px; color: #aaa;
+}
+.submit-msg.ok { color: #2a9; }
+.submit-msg.err { color: #c00; }
 
-/* ─── Post list ─────────────────────────────────────────────────────────── */
-.post-list { display: flex; flex-direction: column; gap: 2px; }
-.post-item {
-  background: #fff; border: 1px solid #efefef; border-radius: 4px;
-  padding: 12px 14px;
-  display: flex; align-items: flex-start; gap: 12px;
+/* ── List ───────────────────────────────────────────────────────────────── */
+.list-section { margin-top: 32px; }
+.list-row {
+  display: flex; align-items: center;
+  border-bottom: 1px solid #f4f4f4;
+  padding: 10px 0; gap: 12px;
 }
-.post-thumb {
-  width: 48px; height: 48px; flex-shrink: 0;
-  border-radius: 3px; background: #f0f0f0;
-  overflow: hidden; display: flex; align-items: center; justify-content: center;
+.list-thumb {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 2px; overflow: hidden;
+  background: #f5f5f5;
+  display: flex; align-items: center; justify-content: center;
 }
-.post-thumb img, .post-thumb video {
+.list-thumb img, .list-thumb video {
   width: 100%; height: 100%; object-fit: cover; display: block;
 }
-.post-thumb-placeholder {
+.list-thumb-ph {
   font-family: "Geist Mono", monospace;
-  font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: #bbb; text-align: center; padding: 4px; line-height: 1.4;
+  font-size: 10px; color: #ccc; text-align: center;
 }
-.post-body { flex: 1; min-width: 0; }
-.post-title {
-  font-size: 14px; font-weight: 400; margin-bottom: 4px;
+.list-body { flex: 1; min-width: 0; }
+.list-title {
+  font-size: 13px; font-weight: 400; color: #111;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
 }
-.post-meta-row {
+.list-meta {
   font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.08em; color: #bbb;
+  font-size: 9px; color: #ccc; letter-spacing: 0.04em;
   display: flex; gap: 8px; flex-wrap: wrap;
 }
-.post-delete {
+.list-del {
   font-family: "Geist Mono", monospace;
-  font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: #e55; background: none; border: none;
-  padding: 4px; flex-shrink: 0; align-self: center;
-  transition: color 130ms;
+  font-size: 10px; color: #ddd; flex-shrink: 0;
+  transition: color 120ms;
+  padding: 4px 0;
 }
-.post-delete:hover { color: #c00; }
-
+.list-del:hover { color: #c00; }
 .list-empty {
   font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: #ccc; padding: 32px 0; text-align: center;
+  font-size: 10px; color: #ddd; padding: 32px 0; text-align: center;
+  letter-spacing: 0.06em;
 }
 .list-loading {
   font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: #ddd; padding: 20px 0; text-align: center;
-}
-
-/* Upload progress */
-.progress-bar-wrap {
-  height: 2px; background: #f0f0f0; border-radius: 1px;
-  margin-top: 8px; display: none;
-}
-.progress-bar-wrap.visible { display: block; }
-.progress-bar {
-  height: 100%; background: #000; border-radius: 1px;
-  transition: width 200ms ease;
-  width: 0%;
+  font-size: 10px; color: #e8e8e8; padding: 24px 0; text-align: center;
 }
 </style>
 </head>
 <body>
 
-<!-- ── Login screen ──────────────────────────────────────────────────────── -->
+<!-- Login -->
 <div id="loginScreen">
-  <div class="login-box">
-    <div class="login-title">Sovereign Archive — Admin</div>
-    <div class="login-field">
-      <label>Email</label>
-      <input type="email" id="loginEmail" autocomplete="email" placeholder="admin@example.com"/>
+  <div class="login-inner">
+    <div class="login-site">sovereign archive — admin</div>
+    <div class="login-row">
+      <label>email</label>
+      <input type="email" id="loginEmail" autocomplete="email" spellcheck="false"/>
     </div>
-    <div class="login-field">
-      <label>Password</label>
+    <div class="login-row">
+      <label>password</label>
       <input type="password" id="loginPassword" autocomplete="current-password"/>
     </div>
-    <div class="login-error" id="loginError"></div>
-    <button class="btn-primary" id="loginSubmit">Sign in</button>
+    <div class="login-actions">
+      <div class="login-error" id="loginError"></div>
+      <button class="btn-submit" id="loginSubmit">enter</button>
+    </div>
   </div>
 </div>
 
-<!-- ── App ───────────────────────────────────────────────────────────────── -->
+<!-- App -->
 <div id="app">
-  <div class="topbar">
-    <span class="topbar-title">Admin</span>
-    <button class="topbar-signout" id="signOutBtn">Sign out</button>
+  <div class="header">
+    <span class="header-title">sovereign — admin</span>
+    <div class="header-actions">
+      <button class="header-tab active" data-tab="projects">projects</button>
+      <button class="header-tab" data-tab="notes">notes</button>
+      <button class="header-signout" id="signOutBtn">sign out</button>
+    </div>
   </div>
 
-  <div class="tabnav">
-    <button class="tab active" data-tab="projects">Projects</button>
-    <button class="tab" data-tab="notes">Notes</button>
-  </div>
-
-  <!-- ── Projects panel ──────────────────────────────────────────────────── -->
+  <!-- Projects panel -->
   <div class="panel active" id="panelProjects">
+    <div class="section-label">new project</div>
 
-    <div class="card">
-      <div class="card-title">New Project</div>
+    <div class="form-row">
+      <span class="form-label">title</span>
+      <input class="form-input" type="text" id="projTitle" placeholder="untitled"/>
+    </div>
 
-      <div class="field">
-        <label>Title</label>
-        <input type="text" id="projTitle" placeholder="Project name"/>
-      </div>
-
-      <div class="field">
-        <label>Tags (Enter to add)</label>
-        <div class="tags-wrap" id="projTagsWrap">
-          <input class="tags-input" id="projTagsInput" placeholder="Add tag…"/>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Media (image / video)</label>
-        <div class="upload-zone" id="projUploadZone">
-          <input type="file" id="projFile" accept="image/*,video/*"/>
-          <div class="upload-label" id="projUploadLabel">Tap to select file</div>
-          <div class="upload-preview" id="projUploadPreview"></div>
-        </div>
-        <div class="progress-bar-wrap" id="projProgress">
-          <div class="progress-bar" id="projProgressBar"></div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Description (optional)</label>
-        <textarea id="projDesc" placeholder="Notes about this project…"></textarea>
-      </div>
-
-      <div class="submit-row">
-        <button class="btn-primary" id="projSubmit">Post</button>
-        <span class="submit-status" id="projStatus"></span>
+    <div class="tags-row" id="projTagsRow">
+      <span class="form-label" style="padding-top:3px;">tags</span>
+      <div class="tags-chips" id="projTagsChips">
+        <input class="tags-input-inline" id="projTagsInput" placeholder="add tag…"/>
       </div>
     </div>
 
-    <div class="card-title" style="padding: 0 0 12px;">All Projects</div>
-    <div class="post-list" id="projList">
-      <div class="list-loading">Loading…</div>
+    <div class="file-row" id="projFileRow">
+      <span class="file-label-col">media</span>
+      <div class="file-pick">
+        <input type="file" id="projFile" accept="image/*,video/*"/>
+        choose file
+      </div>
+      <span class="file-name" id="projFileName">—</span>
+      <button class="file-clear" id="projFileClear" style="display:none">×</button>
+    </div>
+    <div class="file-preview" id="projFilePreview"></div>
+    <div class="progress-row" id="projProgressRow">
+      <div class="progress-track"><div class="progress-fill" id="projProgressFill"></div></div>
+    </div>
+
+    <div class="form-row">
+      <span class="form-label">desc</span>
+      <textarea class="form-textarea" id="projDesc" placeholder="optional note…"></textarea>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-post" id="projSubmit">post</button>
+      <span class="submit-msg" id="projMsg"></span>
+    </div>
+
+    <div class="list-section">
+      <div class="section-label">all projects</div>
+      <div id="projList"><div class="list-loading">—</div></div>
     </div>
   </div>
 
-  <!-- ── Notes panel ─────────────────────────────────────────────────────── -->
+  <!-- Notes panel -->
   <div class="panel" id="panelNotes">
+    <div class="section-label">new note</div>
 
-    <div class="card">
-      <div class="card-title">New Note</div>
-
-      <div class="field">
-        <label>Text</label>
-        <textarea id="noteText" placeholder="Write something…" style="min-height:100px;"></textarea>
-      </div>
-
-      <div class="field">
-        <label>Media (image / video / audio)</label>
-        <div class="upload-zone" id="noteUploadZone">
-          <input type="file" id="noteFile" accept="image/*,video/*,audio/*"/>
-          <div class="upload-label" id="noteUploadLabel">Tap to select file</div>
-          <div class="upload-preview" id="noteUploadPreview"></div>
-        </div>
-        <div class="progress-bar-wrap" id="noteProgress">
-          <div class="progress-bar" id="noteProgressBar"></div>
-        </div>
-      </div>
-
-      <div class="submit-row">
-        <button class="btn-primary" id="noteSubmit">Post</button>
-        <span class="submit-status" id="noteStatus"></span>
-      </div>
+    <div class="form-row">
+      <span class="form-label">text</span>
+      <textarea class="form-textarea" id="noteText" placeholder="write something…"></textarea>
     </div>
 
-    <div class="card-title" style="padding: 0 0 12px;">All Notes</div>
-    <div class="post-list" id="noteList">
-      <div class="list-loading">Loading…</div>
+    <div class="file-row" id="noteFileRow">
+      <span class="file-label-col">media</span>
+      <div class="file-pick">
+        <input type="file" id="noteFile" accept="image/*,video/*,audio/*"/>
+        choose file
+      </div>
+      <span class="file-name" id="noteFileName">—</span>
+      <button class="file-clear" id="noteFileClear" style="display:none">×</button>
+    </div>
+    <div class="file-preview" id="noteFilePreview"></div>
+    <div class="progress-row" id="noteProgressRow">
+      <div class="progress-track"><div class="progress-fill" id="noteProgressFill"></div></div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-post" id="noteSubmit">post</button>
+      <span class="submit-msg" id="noteMsg"></span>
+    </div>
+
+    <div class="list-section">
+      <div class="section-label">all notes</div>
+      <div id="noteList"><div class="list-loading">—</div></div>
     </div>
   </div>
 </div>
@@ -391,7 +414,7 @@ input, textarea, select { font-family: inherit; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
-/* ─── Firebase init ─────────────────────────────────────────────────────── */
+/* ── Firebase init ──────────────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            "AIzaSyBt8YrBaUZYdHVh_L7xli0HKm7EfX6n_BI",
   authDomain:        "projectp-fc779.firebaseapp.com",
@@ -402,29 +425,33 @@ const firebaseConfig = {
 };
 const ADMIN_EMAIL = "paulody1021@gmail.com";
 
-const app     = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const auth    = firebase.auth();
 const db      = firebase.firestore();
 const storage = firebase.storage();
 
-/* ─── Auth ──────────────────────────────────────────────────────────────── */
+/* ── Auth ───────────────────────────────────────────────────────────────── */
 const loginScreen = document.getElementById("loginScreen");
 const appEl       = document.getElementById("app");
+let listenersReady = false;
 
-document.getElementById("loginSubmit").addEventListener("click", async () => {
+const loginSubmitBtn = document.getElementById("loginSubmit");
+document.getElementById("loginPassword").addEventListener("keydown", e => {
+  if (e.key === "Enter") loginSubmitBtn.click();
+});
+
+loginSubmitBtn.addEventListener("click", async () => {
   const email = document.getElementById("loginEmail").value.trim();
   const pass  = document.getElementById("loginPassword").value;
   const errEl = document.getElementById("loginError");
   errEl.textContent = "";
+  loginSubmitBtn.disabled = true;
   try {
     await auth.signInWithEmailAndPassword(email, pass);
-  } catch (e) {
-    errEl.textContent = "Incorrect email or password.";
+  } catch {
+    errEl.textContent = "incorrect email or password";
+    loginSubmitBtn.disabled = false;
   }
-});
-
-document.getElementById("loginPassword").addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("loginSubmit").click();
 });
 
 document.getElementById("signOutBtn").addEventListener("click", () => auth.signOut());
@@ -433,51 +460,29 @@ auth.onAuthStateChanged(user => {
   if (user && user.email === ADMIN_EMAIL) {
     loginScreen.style.display = "none";
     appEl.classList.add("visible");
-    initListeners();
+    if (!listenersReady) { listenersReady = true; initAll(); }
   } else {
-    loginScreen.style.display = "flex";
+    loginScreen.style.display = "";
     appEl.classList.remove("visible");
   }
 });
 
-/* ─── Tab nav ───────────────────────────────────────────────────────────── */
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+document.querySelectorAll(".header-tab[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".header-tab[data-tab]").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-    tab.classList.add("active");
-    document.getElementById("panel" + capitalize(tab.dataset.tab)).classList.add("active");
+    btn.classList.add("active");
+    document.getElementById("panel" + btn.dataset.tab[0].toUpperCase() + btn.dataset.tab.slice(1)).classList.add("active");
   });
 });
-function capitalize(s) { return s[0].toUpperCase() + s.slice(1); }
 
-/* ─── Helpers ───────────────────────────────────────────────────────────── */
+/* ── Helpers ────────────────────────────────────────────────────────────── */
 function detectType(file) {
   if (file.type.startsWith("image/")) return "image";
   if (file.type.startsWith("video/")) return "video";
   if (file.type.startsWith("audio/")) return "audio";
   return "other";
-}
-
-async function uploadFile(file, progressBar, progressWrap) {
-  const path = `uploads/${Date.now()}_${file.name}`;
-  const ref  = storage.ref(path);
-  const task = ref.put(file);
-
-  progressWrap.classList.add("visible");
-  await new Promise((res, rej) => {
-    task.on("state_changed",
-      snap => {
-        const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
-        progressBar.style.width = pct + "%";
-      },
-      rej,
-      res
-    );
-  });
-  progressWrap.classList.remove("visible");
-  progressBar.style.width = "0%";
-  return task.snapshot.ref.getDownloadURL();
 }
 
 function timeStr(ts) {
@@ -486,102 +491,169 @@ function timeStr(ts) {
   return d.toLocaleString([], { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
 }
 
-/* ─── File preview ──────────────────────────────────────────────────────── */
-function setupFilePreview(inputId, zoneId, labelId, previewId) {
+/* Upload with progress — returns download URL */
+async function uploadFile(file, fillEl, rowEl) {
+  const path = `uploads/${Date.now()}_${file.name}`;
+  const ref  = storage.ref(path);
+  const task = ref.put(file);
+  rowEl.style.display = "block";
+  await new Promise((res, rej) => {
+    task.on("state_changed",
+      snap => { fillEl.style.width = (snap.bytesTransferred / snap.totalBytes * 100) + "%"; },
+      rej, res
+    );
+  });
+  rowEl.style.display = "none";
+  fillEl.style.width = "0%";
+  return task.snapshot.ref.getDownloadURL();
+}
+
+/* File picker setup: returns { getFile, clear } */
+function setupFilePicker(inputId, nameId, clearId, previewId) {
   const input   = document.getElementById(inputId);
-  const zone    = document.getElementById(zoneId);
-  const label   = document.getElementById(labelId);
+  const nameEl  = document.getElementById(nameId);
+  const clearEl = document.getElementById(clearId);
   const preview = document.getElementById(previewId);
+
+  function clear() {
+    input.value = "";
+    nameEl.textContent = "—";
+    clearEl.style.display = "none";
+    preview.style.display = "none";
+    preview.innerHTML = "";
+  }
 
   input.addEventListener("change", () => {
     const file = input.files[0];
     if (!file) return;
+    nameEl.textContent = file.name;
+    clearEl.style.display = "";
+    // preview
     const type = detectType(file);
     const url  = URL.createObjectURL(file);
     preview.innerHTML = "";
     if (type === "image") {
-      const img = document.createElement("img");
-      img.src = url; preview.appendChild(img);
+      const img = document.createElement("img"); img.src = url; preview.appendChild(img);
     } else if (type === "video") {
-      const vid = document.createElement("video");
-      vid.src = url; vid.controls = true; vid.muted = true;
-      preview.appendChild(vid);
-    } else {
-      const lbl = document.createElement("div");
-      lbl.style.cssText = "font-family:'Geist Mono',monospace;font-size:9px;color:#888;padding:8px 0;";
-      lbl.textContent = file.name;
-      preview.appendChild(lbl);
+      const vid = document.createElement("video"); vid.src = url; vid.controls = true; vid.muted = true; preview.appendChild(vid);
     }
-    preview.style.display = "block";
-    label.style.display = "none";
-    zone.classList.add("has-file");
+    preview.style.display = preview.children.length ? "block" : "none";
   });
+
+  clearEl.addEventListener("click", clear);
+  return { getFile: () => input.files[0] || null, clear };
 }
 
-/* ─── Tags input ────────────────────────────────────────────────────────── */
-function setupTagsInput(wrapId, inputId) {
-  const wrap  = document.getElementById(wrapId);
+/* Textarea auto-height */
+function autoHeight(el) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+/* Tags input: returns { getTags, clearTags } */
+function setupTags(chipsId, inputId) {
+  const chips = document.getElementById(chipsId);
   const input = document.getElementById(inputId);
   let tags = [];
 
-  function renderTags() {
-    wrap.querySelectorAll(".tag-chip").forEach(el => el.remove());
-    tags.forEach((tag, i) => {
+  function render() {
+    chips.querySelectorAll(".tag-chip").forEach(el => el.remove());
+    tags.forEach((t, i) => {
       const chip = document.createElement("span");
       chip.className = "tag-chip";
-      chip.innerHTML = `${tag}<span class="tag-chip-rm" data-i="${i}">×</span>`;
-      chip.querySelector(".tag-chip-rm").addEventListener("click", () => {
-        tags.splice(i, 1); renderTags();
-      });
-      wrap.insertBefore(chip, input);
+      chip.innerHTML = `${t}<span class="tag-chip-rm" data-i="${i}">×</span>`;
+      chip.querySelector(".tag-chip-rm").addEventListener("click", () => { tags.splice(i,1); render(); });
+      chips.insertBefore(chip, input);
     });
   }
 
   input.addEventListener("keydown", e => {
     if ((e.key === "Enter" || e.key === ",") && input.value.trim()) {
-      e.preventDefault();
-      tags.push(input.value.trim());
-      input.value = "";
-      renderTags();
+      e.preventDefault(); tags.push(input.value.trim()); input.value = ""; render();
     }
-    if (e.key === "Backspace" && !input.value && tags.length) {
-      tags.pop(); renderTags();
-    }
+    if (e.key === "Backspace" && !input.value && tags.length) { tags.pop(); render(); }
   });
 
-  wrap.addEventListener("click", () => input.focus());
-  return { getTags: () => [...tags], clearTags: () => { tags = []; renderTags(); } };
+  return {
+    getTags:   () => [...tags],
+    clearTags: () => { tags = []; render(); }
+  };
 }
 
-/* ─── Init listeners (called once after login) ──────────────────────────── */
-let listenersStarted = false;
-function initListeners() {
-  if (listenersStarted) return;
-  listenersStarted = true;
+/* Render a list row */
+function listRow(data, id, collection) {
+  const row = document.createElement("div");
+  row.className = "list-row";
 
-  setupFilePreview("projFile", "projUploadZone", "projUploadLabel", "projUploadPreview");
-  setupFilePreview("noteFile", "noteUploadZone", "noteUploadLabel", "noteUploadPreview");
-  const projTags = setupTagsInput("projTagsWrap", "projTagsInput");
+  const thumb = document.createElement("div");
+  thumb.className = "list-thumb";
+  const imgUrl = data.mediaUrl || (data.attachments && data.attachments[0] && data.attachments[0].url);
+  const imgType = data.mediaType || (data.attachments && data.attachments[0] && data.attachments[0].type);
+  if (imgUrl && imgType === "image") {
+    const img = document.createElement("img"); img.src = imgUrl; thumb.appendChild(img);
+  } else if (imgUrl && imgType === "video") {
+    const vid = document.createElement("video"); vid.src = imgUrl; vid.muted = true; thumb.appendChild(vid);
+  } else {
+    const ph = document.createElement("div"); ph.className = "list-thumb-ph";
+    ph.textContent = (data.title || data.text || "?")[0].toUpperCase(); thumb.appendChild(ph);
+  }
 
-  /* ── Project submit ─────────────────────────────────────────────────── */
+  const body = document.createElement("div");
+  body.className = "list-body";
+  const title = document.createElement("div");
+  title.className = "list-title";
+  title.textContent = data.title || (data.text || "").slice(0,60) || "(empty)";
+  const meta = document.createElement("div");
+  meta.className = "list-meta";
+  const tags = (data.tags || []).map(t => `<span>${t}</span>`).join("");
+  meta.innerHTML = `<span>${timeStr(data.createdAt)}</span>${tags}`;
+  body.appendChild(title); body.appendChild(meta);
+
+  const del = document.createElement("button");
+  del.className = "list-del"; del.textContent = "delete";
+  del.addEventListener("click", async () => {
+    if (!confirm("Delete?")) return;
+    await db.collection(collection).doc(id).delete();
+  });
+
+  row.appendChild(thumb); row.appendChild(body); row.appendChild(del);
+  return row;
+}
+
+/* ── Init (after login) ─────────────────────────────────────────────────── */
+function initAll() {
+  /* Textareas */
+  ["projDesc","noteText"].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener("input", () => autoHeight(el));
+  });
+
+  /* File pickers */
+  const projFile = setupFilePicker("projFile","projFileName","projFileClear","projFilePreview");
+  const noteFile = setupFilePicker("noteFile","noteFileName","noteFileClear","noteFilePreview");
+
+  /* Tags */
+  const projTags = setupTags("projTagsChips","projTagsInput");
+
+  /* ── Project submit ──────────────────────────────────────────────────── */
   document.getElementById("projSubmit").addEventListener("click", async () => {
     const title = document.getElementById("projTitle").value.trim();
     const desc  = document.getElementById("projDesc").value.trim();
     const tags  = projTags.getTags();
-    const file  = document.getElementById("projFile").files[0];
-    const statusEl = document.getElementById("projStatus");
+    const file  = projFile.getFile();
+    const msgEl = document.getElementById("projMsg");
+    const btn   = document.getElementById("projSubmit");
 
-    if (!title) { statusEl.textContent = "Title required."; statusEl.className = "submit-status err"; return; }
+    if (!title) { msgEl.textContent = "title required"; msgEl.className = "submit-msg err"; return; }
 
-    const btn = document.getElementById("projSubmit");
     btn.disabled = true;
-    statusEl.textContent = file ? "Uploading…" : "Saving…";
-    statusEl.className = "submit-status";
+    msgEl.textContent = file ? "uploading…" : "saving…";
+    msgEl.className = "submit-msg";
 
     try {
       let mediaUrl = null, mediaType = null;
       if (file) {
-        mediaUrl  = await uploadFile(file, document.getElementById("projProgressBar"), document.getElementById("projProgress"));
+        mediaUrl  = await uploadFile(file, document.getElementById("projProgressFill"), document.getElementById("projProgressRow"));
         mediaType = detectType(file);
       }
       await db.collection("projects").add({
@@ -589,43 +661,38 @@ function initListeners() {
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         author: auth.currentUser.email,
       });
-      // reset
       document.getElementById("projTitle").value = "";
       document.getElementById("projDesc").value  = "";
-      document.getElementById("projFile").value  = "";
-      document.getElementById("projUploadPreview").style.display = "none";
-      document.getElementById("projUploadPreview").innerHTML = "";
-      document.getElementById("projUploadLabel").style.display = "";
-      document.getElementById("projUploadZone").classList.remove("has-file");
+      autoHeight(document.getElementById("projDesc"));
       projTags.clearTags();
-      statusEl.textContent = "Posted ✓"; statusEl.className = "submit-status ok";
-      setTimeout(() => { statusEl.textContent = ""; }, 3000);
+      projFile.clear();
+      msgEl.textContent = "posted"; msgEl.className = "submit-msg ok";
+      setTimeout(() => { msgEl.textContent = ""; msgEl.className = "submit-msg"; }, 3000);
     } catch (e) {
-      statusEl.textContent = "Error: " + e.message; statusEl.className = "submit-status err";
+      msgEl.textContent = e.message; msgEl.className = "submit-msg err";
     } finally {
       btn.disabled = false;
     }
   });
 
-  /* ── Note submit ────────────────────────────────────────────────────── */
+  /* ── Note submit ─────────────────────────────────────────────────────── */
   document.getElementById("noteSubmit").addEventListener("click", async () => {
-    const text = document.getElementById("noteText").value.trim();
-    const file = document.getElementById("noteFile").files[0];
-    const statusEl = document.getElementById("noteStatus");
+    const text  = document.getElementById("noteText").value.trim();
+    const file  = noteFile.getFile();
+    const msgEl = document.getElementById("noteMsg");
+    const btn   = document.getElementById("noteSubmit");
 
-    if (!text && !file) { statusEl.textContent = "Text or file required."; statusEl.className = "submit-status err"; return; }
+    if (!text && !file) { msgEl.textContent = "text or file required"; msgEl.className = "submit-msg err"; return; }
 
-    const btn = document.getElementById("noteSubmit");
     btn.disabled = true;
-    statusEl.textContent = file ? "Uploading…" : "Saving…";
-    statusEl.className = "submit-status";
+    msgEl.textContent = file ? "uploading…" : "saving…";
+    msgEl.className = "submit-msg";
 
     try {
       let attachments = [];
       if (file) {
-        const url  = await uploadFile(file, document.getElementById("noteProgressBar"), document.getElementById("noteProgress"));
-        const type = detectType(file);
-        attachments = [{ url, type, name: file.name }];
+        const url  = await uploadFile(file, document.getElementById("noteProgressFill"), document.getElementById("noteProgressRow"));
+        attachments = [{ url, type: detectType(file), name: file.name }];
       }
       await db.collection("notes").add({
         text, attachments,
@@ -633,108 +700,30 @@ function initListeners() {
         author: auth.currentUser.email,
       });
       document.getElementById("noteText").value = "";
-      document.getElementById("noteFile").value = "";
-      document.getElementById("noteUploadPreview").style.display = "none";
-      document.getElementById("noteUploadPreview").innerHTML = "";
-      document.getElementById("noteUploadLabel").style.display = "";
-      document.getElementById("noteUploadZone").classList.remove("has-file");
-      statusEl.textContent = "Posted ✓"; statusEl.className = "submit-status ok";
-      setTimeout(() => { statusEl.textContent = ""; }, 3000);
+      autoHeight(document.getElementById("noteText"));
+      noteFile.clear();
+      msgEl.textContent = "posted"; msgEl.className = "submit-msg ok";
+      setTimeout(() => { msgEl.textContent = ""; msgEl.className = "submit-msg"; }, 3000);
     } catch (e) {
-      statusEl.textContent = "Error: " + e.message; statusEl.className = "submit-status err";
+      msgEl.textContent = e.message; msgEl.className = "submit-msg err";
     } finally {
       btn.disabled = false;
     }
   });
 
-  /* ── Project list ───────────────────────────────────────────────────── */
-  db.collection("projects").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-    const list = document.getElementById("projList");
-    list.innerHTML = "";
-    if (snapshot.empty) {
-      list.innerHTML = '<div class="list-empty">No projects yet</div>'; return;
-    }
-    snapshot.forEach(docSnap => {
-      const d  = docSnap.data();
-      const id = docSnap.id;
-      const item = document.createElement("div");
-      item.className = "post-item";
-
-      const thumb = document.createElement("div");
-      thumb.className = "post-thumb";
-      if (d.mediaUrl && d.mediaType === "image") {
-        const img = document.createElement("img"); img.src = d.mediaUrl; thumb.appendChild(img);
-      } else if (d.mediaUrl && d.mediaType === "video") {
-        const vid = document.createElement("video"); vid.src = d.mediaUrl; vid.muted = true; thumb.appendChild(vid);
-      } else {
-        const ph = document.createElement("div"); ph.className = "post-thumb-placeholder";
-        ph.textContent = (d.title || "?")[0].toUpperCase(); thumb.appendChild(ph);
-      }
-
-      const body = document.createElement("div"); body.className = "post-body";
-      body.innerHTML = `
-        <div class="post-title">${d.title || "Untitled"}</div>
-        <div class="post-meta-row">
-          <span>${timeStr(d.createdAt)}</span>
-          ${(d.tags || []).map(t => `<span>${t}</span>`).join("")}
-        </div>`;
-
-      const del = document.createElement("button");
-      del.className = "post-delete"; del.textContent = "delete";
-      del.addEventListener("click", async () => {
-        if (!confirm(`Delete "${d.title}"?`)) return;
-        await db.collection("projects").doc(id).delete();
-      });
-
-      item.appendChild(thumb); item.appendChild(body); item.appendChild(del);
-      list.appendChild(item);
-    });
+  /* ── Realtime lists ──────────────────────────────────────────────────── */
+  db.collection("projects").orderBy("createdAt","desc").onSnapshot(snap => {
+    const el = document.getElementById("projList");
+    el.innerHTML = "";
+    if (snap.empty) { el.innerHTML = '<div class="list-empty">no projects yet</div>'; return; }
+    snap.forEach(d => el.appendChild(listRow(d.data(), d.id, "projects")));
   });
 
-  /* ── Note list ──────────────────────────────────────────────────────── */
-  db.collection("notes").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-    const list = document.getElementById("noteList");
-    list.innerHTML = "";
-    if (snapshot.empty) {
-      list.innerHTML = '<div class="list-empty">No notes yet</div>'; return;
-    }
-    snapshot.forEach(docSnap => {
-      const d  = docSnap.data();
-      const id = docSnap.id;
-      const item = document.createElement("div");
-      item.className = "post-item";
-
-      const thumb = document.createElement("div");
-      thumb.className = "post-thumb";
-      const att = d.attachments && d.attachments[0];
-      if (att && att.type === "image") {
-        const img = document.createElement("img"); img.src = att.url; thumb.appendChild(img);
-      } else if (att && att.type === "video") {
-        const vid = document.createElement("video"); vid.src = att.url; vid.muted = true; thumb.appendChild(vid);
-      } else if (att) {
-        const ph = document.createElement("div"); ph.className = "post-thumb-placeholder";
-        ph.textContent = att.type.toUpperCase(); thumb.appendChild(ph);
-      } else {
-        const ph = document.createElement("div"); ph.className = "post-thumb-placeholder";
-        ph.textContent = "TXT"; thumb.appendChild(ph);
-      }
-
-      const body = document.createElement("div"); body.className = "post-body";
-      const preview = (d.text || "").slice(0, 80) + ((d.text || "").length > 80 ? "…" : "");
-      body.innerHTML = `
-        <div class="post-title">${preview || "(no text)"}</div>
-        <div class="post-meta-row"><span>${timeStr(d.createdAt)}</span></div>`;
-
-      const del = document.createElement("button");
-      del.className = "post-delete"; del.textContent = "delete";
-      del.addEventListener("click", async () => {
-        if (!confirm("Delete this note?")) return;
-        await db.collection("notes").doc(id).delete();
-      });
-
-      item.appendChild(thumb); item.appendChild(body); item.appendChild(del);
-      list.appendChild(item);
-    });
+  db.collection("notes").orderBy("createdAt","desc").onSnapshot(snap => {
+    const el = document.getElementById("noteList");
+    el.innerHTML = "";
+    if (snap.empty) { el.innerHTML = '<div class="list-empty">no notes yet</div>'; return; }
+    snap.forEach(d => el.appendChild(listRow(d.data(), d.id, "notes")));
   });
 }
 </script>

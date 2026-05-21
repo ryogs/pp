@@ -728,7 +728,6 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 <div id="screenNote" class="screen">
   <header class="note-header">
     <button class="note-sort-btn" id="noteSortBtn" aria-label="Sort order">↓</button>
-    <button class="note-login-btn" id="loginBtn" style="display:none"></button>
     <button class="note-header-back" id="noteBack" aria-label="Back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
@@ -738,20 +737,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   <div class="note-feed" id="noteFeed">
     <span class="note-empty" id="noteEmpty">No posts yet</span>
   </div>
-  <!-- Login prompt shown to non-admin visitors -->
   <div class="note-login-prompt" id="loginPrompt" style="display:none"></div>
-</div>
-
-<!-- Login modal -->
-<div class="login-modal" id="loginModal" style="display:none">
-  <div class="login-modal-inner">
-    <div class="login-modal-title">Sign in</div>
-    <input class="login-input" id="loginEmail" type="email" placeholder="Email" autocomplete="email"/>
-    <input class="login-input" id="loginPassword" type="password" placeholder="Password" autocomplete="current-password"/>
-    <div class="login-error" id="loginError"></div>
-    <button class="login-submit" id="loginSubmit">Sign in</button>
-    <button class="login-cancel" id="loginCancel">Cancel</button>
-  </div>
 </div>
 
 <!-- Note composer (shown only when Note screen is active) -->
@@ -825,12 +811,6 @@ function updateComposerVisibility() {
   const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
   const onNote  = currentScreen === "note";
   noteComposer.classList.toggle("visible", onNote && isAdmin);
-  loginPrompt.style.display = (onNote && !isAdmin) ? "flex" : "none";
-}
-
-function updateLoginUI(isAdmin) {
-  loginBtn.textContent   = isAdmin ? "Sign out" : "Sign in";
-  loginBtn.style.display = "";
 }
 
 /* ─── Screen router ──────────────────────────────────────────────────────── */
@@ -909,47 +889,7 @@ const noteFileInput   = document.getElementById("noteFileInput");
 const noteFeed        = document.getElementById("noteFeed");
 const noteEmpty       = document.getElementById("noteEmpty");
 const noteAttachPreview = document.getElementById("noteAttachPreview");
-const loginBtn        = document.getElementById("loginBtn");
-const loginModal      = document.getElementById("loginModal");
 const loginPrompt     = document.getElementById("loginPrompt");
-
-/* ── Login / logout ───────────────────────────────────────────────────── */
-loginBtn.addEventListener("click", () => {
-  const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-  if (isAdmin) {
-    auth.signOut();
-  } else {
-    loginModal.style.display = "flex";
-    document.getElementById("loginEmail").focus();
-  }
-});
-
-document.getElementById("loginCancel").addEventListener("click", () => {
-  loginModal.style.display = "none";
-  document.getElementById("loginError").textContent = "";
-});
-
-document.getElementById("loginSubmit").addEventListener("click", async () => {
-  const email = document.getElementById("loginEmail").value.trim();
-  const pass  = document.getElementById("loginPassword").value;
-  const errEl = document.getElementById("loginError");
-  errEl.textContent = "";
-  try {
-    await auth.signInWithEmailAndPassword(email, pass);
-    loginModal.style.display = "none";
-    document.getElementById("loginPassword").value = "";
-  } catch (e) {
-    errEl.textContent = "Incorrect email or password.";
-  }
-});
-
-// Close modal on backdrop click
-loginModal.addEventListener("click", e => {
-  if (e.target === loginModal) {
-    loginModal.style.display = "none";
-    document.getElementById("loginError").textContent = "";
-  }
-});
 
 /* ── Detect file type ─────────────────────────────────────────────────── */
 function detectType(file) {
@@ -1419,9 +1359,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(
 /* ─── Firebase Auth state — registered last so all vars/fns exist ─────────── */
 auth.onAuthStateChanged(user => {
   currentUser = user;
-  const isAdmin = user && user.email === ADMIN_EMAIL;
   updateComposerVisibility();
-  updateLoginUI(isAdmin);
 });
 </script>
 </body>
