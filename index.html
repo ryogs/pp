@@ -53,6 +53,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 ═══════════════════════════════════════════════════════════════════════════ */
 #screenLanding {
   display: flex; align-items: center; justify-content: center;
+  padding-bottom: 60px;
 }
 
 /* Rainbow pill */
@@ -92,10 +93,10 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
    Open state deepens the fill slightly.                                     */
 .fab {
   position: fixed;
-  bottom: max(env(safe-area-inset-bottom,0px), 56px);
+  bottom: max(env(safe-area-inset-bottom,0px), 72px);
   left: 50%; transform: translateX(-50%);
   z-index: 200;
-  width: 56px; height: 32px;
+  width: 68px; height: 38px;
   border-radius: 9999px;
   border: none;
   background: #f0f0f0;
@@ -149,7 +150,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 /* ─── Pop-up menu — same grey pill quality ───────────────────────────────── */
 .fab-menu {
   position: fixed;
-  bottom: max(env(safe-area-inset-bottom,0px), 100px);
+  bottom: max(env(safe-area-inset-bottom,0px), 122px);
   left: 50%; transform: translateX(-50%) translateY(8px) scale(0.96);
   transform-origin: bottom center;
   z-index: 199;
@@ -408,17 +409,16 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   border-bottom: 1px solid #000;
   display: flex; align-items: center; padding: 0 16px; gap: 10px;
 }
-.note-header-pill {
-  width: 4px; height: 18px; border-radius: 9999px; flex-shrink: 0;
-  background: linear-gradient(to bottom,
-    #ffb7c8,#ffd99a,#b6ffc3,#a5e4ff,#b0b8ff,#e0a8ff,#ffb7c8);
-  background-size: 100% 600%;
-  animation: flow 22s linear infinite; filter: saturate(1.4);
-}
-.note-header-title {
+/* Sort button */
+.note-sort-btn {
   font-family: "Geist Mono", monospace;
-  font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+  font-size: 13px; color: #666;
+  padding: 4px 8px; border-radius: 4px;
+  transition: color 130ms, background 130ms;
+  flex-shrink: 0;
 }
+.note-sort-btn:active { color: #000; background: #f0f0f0; }
+
 .note-header-back {
   margin-left: auto;
   display: flex; align-items: center; justify-content: center;
@@ -494,11 +494,12 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
 .note-post-delete {
   margin-left: auto;
   font-family: "Geist Mono", monospace;
-  font-size: 8px; color: #ddd; cursor: pointer; padding: 4px;
+  font-size: 8px; color: #e55; cursor: pointer; padding: 4px;
   -webkit-tap-highlight-color: transparent;
-  transition: color 130ms;
+  transition: color 130ms, opacity 130ms;
+  letter-spacing: 0.06em; text-transform: uppercase;
 }
-.note-post-delete:active { color: #000; }
+.note-post-delete:active { color: #c00; opacity: 0.7; }
 
 /* Composer — fixed at bottom */
 .note-composer {
@@ -719,15 +720,14 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
   <ul id="listView" class="hidden"></ul>
   <footer class="arch-footer">
     <span class="arch-footer-copy">© MMXXVI</span>
-    <span class="arch-footer-yr">001 — 100</span>
+    <span class="arch-footer-yr" id="archCount">—</span>
   </footer>
 </div>
 
 <!-- ══ NOTE ══════════════════════════════════════════════════════════════════ -->
 <div id="screenNote" class="screen">
   <header class="note-header">
-    <div class="note-header-pill" aria-hidden="true"></div>
-    <span class="note-header-title">Note</span>
+    <button class="note-sort-btn" id="noteSortBtn" aria-label="Sort order">↓</button>
     <button class="note-login-btn" id="loginBtn" style="display:none"></button>
     <button class="note-header-back" id="noteBack" aria-label="Back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -739,9 +739,7 @@ button { all: unset; cursor: pointer; -webkit-tap-highlight-color: transparent; 
     <span class="note-empty" id="noteEmpty">No posts yet</span>
   </div>
   <!-- Login prompt shown to non-admin visitors -->
-  <div class="note-login-prompt" id="loginPrompt" style="display:none">
-    <p>Admin access required to post.</p>
-  </div>
+  <div class="note-login-prompt" id="loginPrompt" style="display:none"></div>
 </div>
 
 <!-- Login modal -->
@@ -875,10 +873,18 @@ function closeFab() {
   fab.setAttribute("aria-expanded","false");
 }
 
-fab.addEventListener("click", () => fabOpen ? closeFab() : openFab());
+function haptic(ms = 8) {
+  if (navigator.vibrate) navigator.vibrate(ms);
+}
+
+fab.addEventListener("click", () => {
+  haptic(6);
+  fabOpen ? closeFab() : openFab();
+});
 
 fabMenu.querySelectorAll(".fab-menu-item").forEach(item => {
   item.addEventListener("click", () => {
+    haptic(8);
     showScreen(item.dataset.target);
   });
 });
@@ -1073,8 +1079,21 @@ async function submitPost() {
   }
 }
 
-/* ── Real-time listener from Firestore ───────────────────────────────── */
-const unsubPosts = db.collection("notes").orderBy("createdAt", "asc").onSnapshot(snapshot => {
+/* ── Sort state ───────────────────────────────────────────────────────── */
+let sortDir = "desc"; // newest first by default
+let unsubPosts = null;
+
+const noteSortBtn = document.getElementById("noteSortBtn");
+noteSortBtn.addEventListener("click", () => {
+  haptic(6);
+  sortDir = sortDir === "desc" ? "asc" : "desc";
+  noteSortBtn.textContent = sortDir === "desc" ? "↓" : "↑";
+  startPostsListener();
+});
+
+function startPostsListener() {
+  if (unsubPosts) unsubPosts(); // cancel previous listener
+  unsubPosts = db.collection("notes").orderBy("createdAt", sortDir).onSnapshot(snapshot => {
   // Build a map of existing post elements by doc ID
   const existing = new Map();
   noteFeed.querySelectorAll(".note-post[data-id]").forEach(el => {
@@ -1103,12 +1122,16 @@ const unsubPosts = db.collection("notes").orderBy("createdAt", "asc").onSnapshot
   // Show/hide empty state
   noteEmpty.style.display = (ids.size === 0) ? "" : "none";
 
-  // Scroll to bottom if on note screen
-  if (currentScreen === "note") {
+  // Scroll to bottom if on note screen and sorting newest-last
+  if (currentScreen === "note" && sortDir === "asc") {
     const noteScreen = document.getElementById("screenNote");
     requestAnimationFrame(() => { noteScreen.scrollTop = noteScreen.scrollHeight; });
   }
-});
+  });  // end onSnapshot
+}     // end startPostsListener
+
+// Start initial listener
+startPostsListener();
 
 /* ── Build post DOM from Firestore data ───────────────────────────────── */
 function buildPost(data, docId) {
@@ -1168,7 +1191,7 @@ function buildPost(data, docId) {
   time.className = "note-post-time";
   const ts = data.createdAt ? data.createdAt.toDate() : new Date();
   time.textContent = ts.toLocaleString([], {
-    month: "2-digit", day: "2-digit",
+    year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit"
   });
   meta.appendChild(time);
@@ -1249,102 +1272,88 @@ LANGS.forEach((l, i) => {
   stack.appendChild(item);
 });
 
-/* ─── Project data ───────────────────────────────────────────────────────── */
-const TOTAL = 100;
-const pad3  = n => String(n).padStart(3,"0");
-const TAG_POOL = [
-  "Ongoing","Archive","Research","Object","System","Field",
-  "Index","Surface","Form","Light","Time","Space",
-  "Signal","Territory","Currency","Sovereign","Material","Network","Protocol","Fragment"
-];
-function deterministicTags(seed, count=3) {
-  let h = (seed * 2654435761) >>> 0;
-  const pool = [...TAG_POOL], out = [];
-  for (let i = 0; i < count; i++) {
-    h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0;
-    out.push(pool.splice(h % pool.length, 1)[0]);
-  }
-  return out;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROJECT — Firebase-backed (Firestore: "projects" collection)
+═══════════════════════════════════════════════════════════════════════════ */
+const gridView  = document.getElementById("gridView");
+const listView  = document.getElementById("listView");
+const archCount = document.getElementById("archCount");
 
-/*
-  Media map — assign media to project slots:
-  MEDIA[1] = { type:"image", src:"./path/to/file.jpg" }
-  MEDIA[2] = { type:"video", src:"./path/to/file.mp4" }
-  MEDIA[3] = { type:"3d",   init: canvas => { // Three.js setup here
-  } }
-*/
-const MEDIA = {};
-
-const projects = Array.from({length: TOTAL}, (_, i) => ({
-  n: i+1,
-  name: `Project ${pad3(i+1)}`,
-  tags: deterministicTags(i+1, 3),
-  media: MEDIA[i+1] || null,
-}));
-
-function buildMedia(m, container) {
+/* ── Build media element from stored URL ─────────────────────────────── */
+function buildProjectMedia(data, container) {
   container.innerHTML = "";
-  if (!m) {
+  if (data.mediaUrl && data.mediaType === "image") {
+    const img = document.createElement("img");
+    img.src = data.mediaUrl; img.alt = ""; img.loading = "lazy";
+    container.appendChild(img);
+  } else if (data.mediaUrl && data.mediaType === "video") {
+    const vid = document.createElement("video");
+    vid.src = data.mediaUrl; vid.muted = true; vid.loop = true;
+    vid.playsInline = true; vid.autoplay = true;
+    container.appendChild(vid);
+    vid.play().catch(() => {});
+  } else {
     const q = document.createElement("span");
     q.className = "grid-media-placeholder";
     q.textContent = "?";
     container.appendChild(q);
-    return;
-  }
-  if (m.type === "image") {
-    const img = document.createElement("img");
-    img.src = m.src; img.alt = ""; img.loading = "lazy";
-    container.appendChild(img);
-  } else if (m.type === "video") {
-    const vid = document.createElement("video");
-    vid.src = m.src; vid.muted = true; vid.loop = true;
-    vid.playsInline = true; vid.autoplay = true;
-    container.appendChild(vid);
-    vid.play().catch(() => {});
-  } else if (m.type === "3d" && typeof m.init === "function") {
-    const canvas = document.createElement("canvas");
-    container.appendChild(canvas);
-    m.init(canvas);
   }
 }
 
-/* ─── Build archive ──────────────────────────────────────────────────────── */
-const gridView = document.getElementById("gridView");
-const listView = document.getElementById("listView");
+/* ── Realtime listener ───────────────────────────────────────────────── */
+let projectDocs = []; // ordered snapshot for detail nav
 
-projects.forEach(p => {
-  // Grid cell
-  const cell = document.createElement("div");
-  cell.className = "grid-cell";
-  cell.dataset.idx = p.n - 1;
+db.collection("projects").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+  projectDocs = snapshot.docs;
+  gridView.innerHTML = "";
+  listView.innerHTML = "";
 
-  const mediaDiv = document.createElement("div");
-  mediaDiv.className = "grid-media";
-  buildMedia(p.media, mediaDiv);
-  cell.appendChild(mediaDiv);
+  if (snapshot.empty) {
+    gridView.innerHTML = '<div style="padding:32px 16px;font-family:\'Geist Mono\',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#ccc;">No projects yet</div>';
+    archCount.textContent = "—";
+    return;
+  }
 
-  const meta = document.createElement("div");
-  meta.className = "grid-meta";
-  meta.innerHTML = `
-    <span class="grid-tag">${p.tags[0]}</span>
-    <span class="grid-name">${p.name}</span>
-    <span class="grid-num">#${pad3(p.n)}</span>`;
-  cell.appendChild(meta);
-  gridView.appendChild(cell);
+  archCount.textContent = String(snapshot.size).padStart(3,"0");
 
-  // List row
-  const li = document.createElement("li");
-  li.className = "project-row";
-  li.dataset.idx = p.n - 1;
-  li.innerHTML = `
-    <span class="row-num">#${pad3(p.n)}</span>
-    <span class="row-name">${p.name}</span>
-    <span class="row-arrow">›</span>`;
-  listView.appendChild(li);
+  snapshot.docs.forEach((docSnap, idx) => {
+    const d = docSnap.data();
+    const id = docSnap.id;
+
+    // Grid cell
+    const cell = document.createElement("div");
+    cell.className = "grid-cell";
+    cell.dataset.id = id;
+
+    const mediaDiv = document.createElement("div");
+    mediaDiv.className = "grid-media";
+    buildProjectMedia(d, mediaDiv);
+    cell.appendChild(mediaDiv);
+
+    const meta = document.createElement("div");
+    meta.className = "grid-meta";
+    const tag = (d.tags && d.tags[0]) || "";
+    const num = String(idx + 1).padStart(3, "0");
+    meta.innerHTML = `
+      <span class="grid-tag">${tag}</span>
+      <span class="grid-name">${d.title || "Untitled"}</span>
+      <span class="grid-num">#${num}</span>`;
+    cell.appendChild(meta);
+    gridView.appendChild(cell);
+
+    // List row
+    const li = document.createElement("li");
+    li.className = "project-row";
+    li.dataset.id = id;
+    li.innerHTML = `
+      <span class="row-num">#${num}</span>
+      <span class="row-name">${d.title || "Untitled"}</span>
+      <span class="row-arrow">›</span>`;
+    listView.appendChild(li);
+  });
 });
 
-/* ─── View toggle ────────────────────────────────────────────────────────── */
+/* ── View toggle ─────────────────────────────────────────────────────── */
 document.getElementById("btnGrid").addEventListener("click", () => {
   gridView.classList.remove("hidden"); listView.classList.add("hidden");
   document.getElementById("btnGrid").classList.add("active");
@@ -1356,7 +1365,7 @@ document.getElementById("btnList").addEventListener("click", () => {
   document.getElementById("btnGrid").classList.remove("active");
 });
 
-/* ─── Detail ─────────────────────────────────────────────────────────────── */
+/* ── Detail panel ────────────────────────────────────────────────────── */
 document.getElementById("archBack").addEventListener("click", () => showScreen("landing"));
 
 const detail     = document.getElementById("detail");
@@ -1366,30 +1375,40 @@ const detailNum  = document.getElementById("detailNum");
 const detailName = document.getElementById("detailName");
 const detailTags = document.getElementById("detailTags");
 
-function openDetail(p) {
-  detailNum.textContent  = `#${pad3(p.n)}`;
-  detailName.textContent = p.name;
-  detailTags.innerHTML   = p.tags.map(t => `<span class="detail-tag">${t}</span>`).join("");
+function openDetail(id) {
+  const docSnap = projectDocs.find(d => d.id === id);
+  if (!docSnap) return;
+  const d = docSnap.data();
+  const idx = projectDocs.indexOf(docSnap);
+  detailNum.textContent  = `#${String(idx + 1).padStart(3,"0")}`;
+  detailName.textContent = d.title || "Untitled";
+  detailTags.innerHTML   = (d.tags || []).map(t => `<span class="detail-tag">${t}</span>`).join("");
   detailTile.querySelectorAll("img,video,canvas").forEach(el => el.remove());
-  if (p.media) { detailQ.style.display = "none"; buildMedia(p.media, detailTile); }
-  else         { detailQ.style.display = ""; }
+  if (d.mediaUrl) {
+    detailQ.style.display = "none";
+    buildProjectMedia(d, detailTile);
+  } else {
+    detailQ.style.display = "";
+    detailQ.textContent = d.title ? d.title[0].toUpperCase() : "?";
+  }
   detail.classList.add("open");
 }
 function closeDetail() { detail.classList.remove("open"); }
 
 let tMoved = false;
-function addTapHandler(el, fn) {
+function addTapHandler(el) {
   el.addEventListener("touchstart", () => { tMoved = false; }, {passive: true});
   el.addEventListener("touchmove",  () => { tMoved = true;  }, {passive: true});
   el.addEventListener("click", e => {
     if (tMoved) return;
-    const cell = e.target.closest("[data-idx]");
+    const cell = e.target.closest("[data-id]");
     if (!cell) return;
-    fn(projects[+cell.dataset.idx]);
+    haptic(6);
+    openDetail(cell.dataset.id);
   });
 }
-addTapHandler(gridView, openDetail);
-addTapHandler(listView, openDetail);
+addTapHandler(gridView);
+addTapHandler(listView);
 
 document.getElementById("detailBack").addEventListener("click", closeDetail);
 let swipeY = 0;
